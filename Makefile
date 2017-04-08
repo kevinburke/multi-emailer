@@ -1,15 +1,20 @@
-.PHONY: assets
+.PHONY: assets static templates
 
 SHELL = /bin/bash
 
 GO_BINDATA := $(shell command -v go-bindata)
 JUSTRUN := $(shell command -v justrun)
+STATICCHECK := $(shell command -v staticcheck)
 
 # Add files that change frequently to this list.
 WATCH_TARGETS = static/style.css templates/index.html main.go form.go
 
 lint:
+ifndef STATICCHECK
+	go get -u honnef.co/go/tools/cmd/staticcheck
+endif
 	go vet ./...
+	staticcheck ./...
 
 test: lint
 	go test ./...
