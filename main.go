@@ -34,7 +34,7 @@ func init() {
 	homepageTpl = template.Must(template.New("homepage").Parse(homepageHTML))
 }
 
-const Version = "0.2"
+const Version = "0.3"
 
 // Static file HTTP server; all assets are packaged up in the assets directory
 // with go-bindata.
