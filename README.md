@@ -27,4 +27,10 @@ message.
 - Start the server: `multi-emailer --config=/path/to/config.yml`. That's it!
 Logs are sent to stderr and can be redirected from there.
 
+## Usage
+
+When users visit the site they'll be redirected to a Google approval page. This
+page will ask them for permission to send emails on their behalf. Then they'll
+be redirected and can type away!
+
 [releases]: https://github.com/kevinburke/multi-emailer/releases
