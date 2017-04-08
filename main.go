@@ -32,9 +32,9 @@ var homepageTpl *template.Template
 func init() {
 	homepageHTML := assets.MustAssetString("templates/index.html")
 	homepageTpl = template.Must(template.New("homepage").Parse(homepageHTML))
-
-	// Add more templates here.
 }
+
+const Version = "0.1"
 
 // Static file HTTP server; all assets are packaged up in the assets directory
 // with go-bindata.
@@ -70,6 +70,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer) http.Handl
 	r := new(handlers.Regexp)
 	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
 	r.Handle(regexp.MustCompile(`^/$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		render(w, homepageTpl, "homepage", struct {
 			Email   *mail.Address
 			Groups  map[string]*Group
@@ -238,5 +239,10 @@ func main() {
 	}
 	logger.Info("Started server", "port", port)
 	mux := NewServeMux(authenticator, m)
-	http.Serve(ln, handlers.Duration(handlers.Log(handlers.Debug(handlers.UUID(mux)))))
+	mux = handlers.UUID(mux)
+	mux = handlers.Server(mux, "multi-emailer/"+Version)
+	mux = handlers.Debug(mux)
+	mux = handlers.Log(mux)
+	mux = handlers.Duration(mux)
+	http.Serve(ln, mux)
 }
