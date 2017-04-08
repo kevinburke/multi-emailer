@@ -36,3 +36,31 @@ ifndef JUSTRUN
 	go get -u github.com/jmhodges/justrun
 endif
 	justrun -v --delay=100ms -c 'make assets serve' $(WATCH_TARGETS)
+
+# make release version=foo
+release: test
+ifndef version
+	@echo "Please provide a version"
+	exit 1
+endif
+ifndef GITHUB_TOKEN
+	@echo "Please set GITHUB_TOKEN in the environment"
+	exit 1
+endif
+ifndef BUMP_VERSION
+	go get github.com/Shyp/bump_version
+endif
+	bump_version --version=$(version) main.go
+	git push origin --tags
+	mkdir -p releases/$(version)
+	GOOS=linux GOARCH=amd64 go build -o releases/$(version)/multi-emailer-linux-amd64 .
+	GOOS=darwin GOARCH=amd64 go build -o releases/$(version)/multi-emailer-darwin-amd64 .
+	GOOS=windows GOARCH=amd64 go build -o releases/$(version)/multi-emailer-windows-amd64 .
+ifndef RELEASE
+	go get -u github.com/aktau/github-release
+endif
+	# these commands are not idempotent so ignore failures if an upload repeats
+	github-release release --user kevinburke --repo multi-emailer --tag $(version) || true
+	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-linux-amd64 --file releases/$(version)/multi-emailer-linux-amd64 || true
+	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-darwin-amd64 --file releases/$(version)/multi-emailer-darwin-amd64 || true
+	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-windows-amd64 --file releases/$(version)/multi-emailer-windows-amd64 || true
