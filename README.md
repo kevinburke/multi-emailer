@@ -1,20 +1,26 @@
-# go html templates
+# multi-emailer
 
-This is a starter pack for doing web development with Go:
+This is a tool for sending out multiple "personal" emails at the same time.
+They'll be sent from your personal Gmail account, and the recipient's name will
+be attached to the top of each email, so it looks like you hand wrote it (unless
+you inspect the email *very* closely).
 
-- Rendering templates,
-- Regex matching incoming routes.
-- Logging incoming requests
-- Serving static content
-- Watching/restarting the server after changes.
+## Installation
 
-Feel free to adapt as you see fit.
+- Download the right `multi-emailer` binary for your platform from [the releases
+page][releases], and copy it to the server.
 
-To get started, run `go get ./...` and then `make serve` to start a server on
-port 7065.
+- Rename `config.sample.yml` to `config.yml` and populate it with values that are
+appropriate - you'll need a Google Client ID and Secret, and you'll need to
+enable the GMail API for the project you created.
 
-Templates go in the "templates" folder; you can see how they're loaded by
-examining the `init` function in main.go.
+- Add the groups of people you want to email. The `email` key should follow this
+format: `"First Last" <email@domain.com>`. You can also provide a plain email
+address - `email@domain.com`. The `opening_line` should be the first line of
+the email to that person - "Dear X". We'll add the comma and the rest of the
+message.
 
-Static files go in the "static" folder. Run "make assets" to recompile them into
-the binary.
+- Start the server: `multi-emailer --config=/path/to/config.yml`. That's it!
+Logs are sent to stderr and can be redirected from there.
+
+[releases]: https://github.com/kevinburke/multi-emailer/releases

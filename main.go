@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,6 +36,7 @@ func init() {
 }
 
 const Version = "0.3"
+const DefaultPort = 8048
 
 // Static file HTTP server; all assets are packaged up in the assets directory
 // with go-bindata.
@@ -114,6 +116,7 @@ type FileConfig struct {
 	GoogleClientID string         `yaml:"google_client_id"`
 	GoogleSecret   string         `yaml:"google_secret"`
 	Groups         []*ConfigGroup `yaml:"groups"`
+	Port           int            `yaml:"port"`
 }
 
 var cfg = flag.String("config", "config.yml", "Path to a config file")
@@ -202,10 +205,19 @@ func main() {
 		}
 	}
 
-	port, ok := os.LookupEnv("PORT")
-	if !ok {
-		port = "8048"
+	if c.Port == 0 {
+		port, ok := os.LookupEnv("PORT")
+		if ok {
+			c.Port, err = strconv.Atoi(port)
+			if err != nil {
+				logger.Error("Invalid port", "err", err, "port", port)
+				os.Exit(2)
+			}
+		} else {
+			c.Port = DefaultPort
+		}
 	}
+
 	var host string
 	if c.PublicHost != "" {
 		u, err := url.Parse(c.PublicHost)
@@ -218,7 +230,7 @@ func main() {
 		}
 		host = u.String()
 	} else {
-		host = "http://localhost:" + port
+		host = "http://localhost:" + strconv.Itoa(c.Port)
 	}
 	cfg := google.Config{
 		SecretKey:               key,
@@ -232,12 +244,12 @@ func main() {
 		},
 	}
 	authenticator := google.NewAuthenticator(cfg)
-	ln, err := net.Listen("tcp", ":"+port)
+	ln, err := net.Listen("tcp", ":"+strconv.Itoa(c.Port))
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(2)
 	}
-	logger.Info("Started server", "port", port)
+	logger.Info("Started server", "port", c.Port)
 	mux := NewServeMux(authenticator, m)
 	mux = handlers.UUID(mux)
 	mux = handlers.Server(mux, "multi-emailer/"+Version)

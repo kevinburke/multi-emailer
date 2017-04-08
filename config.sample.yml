@@ -16,10 +16,38 @@
 # If a server key is present, but invalid, the server will not start.
 secret_key: fill-in-key
 
+# Local port to listen on. If omitted, check the PORT environment variable, if
+# that is not present, then 8048 is used.
+port: 8048
+
 # What users type in their browser to reach your site (scheme+host)
 public_host: http://localhost:8048
 
 # To create/configure Google credentials, see
 # https://github.com/saintpete/logrole/blob/master/docs/google.md
+#
+# Then, enable the GMail API for your project by going here:
+# https://console.developers.google.com/apis/api/gmail.googleapis.com/overview
+# and clicking "Enable" at the top of the screen.
 google_client_id:     customdomain.apps.googleusercontent.com
 google_client_secret: W-secretkey
+
+groups:
+    - id: dotcom
+      name: Dot Com Email Addresses
+      recipients:
+          - email: Kevin Burke <kevin@example.com>
+            opening_line: Hi Kevin
+          - email: Abe Lincoln <abe@example.com>
+            opening_line: President Lincoln
+          - email: Margaret Hamilton <margaret@example.com>
+            opening_line: Mrs. Hamilton
+    - id: dotorg
+      name: Dot Org Email List
+      recipients:
+          - email: Kevin Burke <kevin@example.org>
+            opening_line: Hi Kevin
+          - email: Abe Lincoln <abe@example.org>
+            opening_line: President Lincoln
+          - email: Margaret Hamilton <margaret@example.org>
+            opening_line: Mrs. Hamilton

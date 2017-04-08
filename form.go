@@ -78,8 +78,8 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 			if !strings.HasSuffix(line, ",") {
 				line = line + ","
 			}
+			html := line + "<br />" + string(blackfriday.MarkdownCommon([]byte(body)))
 			body := line + "\n\n" + body
-			html := blackfriday.MarkdownCommon([]byte(body))
 			msg := &gophermail.Message{
 				From:     *auth.Email,
 				To:       []mail.Address{*to.Address},
