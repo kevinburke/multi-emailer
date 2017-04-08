@@ -5,6 +5,10 @@ They'll be sent from your personal Gmail account, and the recipient's name will
 be attached to the top of each email, so it looks like you hand wrote it (unless
 you inspect the email *very* closely).
 
+Here's a screenshot:
+
+<img src="https://monosnap.com/file/y8iqP37afiCUA1lN0xhoifYWsXP0Bx.png">
+
 ## Installation
 
 - Download the right `multi-emailer` binary for your platform from [the releases
