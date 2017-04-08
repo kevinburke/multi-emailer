@@ -50,16 +50,11 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 		http.Redirect(w, r, "/", 302)
 		return
 	}
-	from, err := mail.ParseAddress(auth.Email)
-	if err != nil {
-		rest.ServerError(w, r, err)
-		return
-	}
 	var group *Group
 	if id == "test" {
 		group = &Group{
 			Recipients: []*Recipient{
-				&Recipient{Address: from, OpeningLine: "Hi test"},
+				&Recipient{Address: auth.Email, OpeningLine: "Hi test"},
 			},
 		}
 	} else {
@@ -86,7 +81,7 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 			body := line + "\n\n" + body
 			html := blackfriday.MarkdownCommon([]byte(body))
 			msg := &gophermail.Message{
-				From:     *from,
+				From:     *auth.Email,
 				To:       []mail.Address{*to.Address},
 				Subject:  subject,
 				Body:     body,
@@ -96,13 +91,13 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 			if err != nil {
 				return err
 			}
-			call := srv.Users.Messages.Send(auth.Email, &gmail.Message{
+			call := srv.Users.Messages.Send(auth.Email.Address, &gmail.Message{
 				Raw: base64.URLEncoding.EncodeToString(raw),
 			})
 			call = call.Context(errctx)
 			_, doErr := call.Do()
 			if doErr == nil {
-				m.Logger.Info("Successfully sent message", "from", from.String(), "to", to.Address.String())
+				m.Logger.Info("Successfully sent message", "from", auth.Email.String(), "to", to.Address.String())
 			}
 			return doErr
 		})
@@ -111,5 +106,10 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 		rest.ServerError(w, r, err)
 		return
 	}
+	var word = "message"
+	if len(group.Recipients) > 1 {
+		word = "messages"
+	}
+	FlashSuccess(w, fmt.Sprintf("Sent %d %s. They will appear in your Sent folder shortly", len(group.Recipients), word), m.secretKey)
 	http.Redirect(w, r, "/", 302)
 }

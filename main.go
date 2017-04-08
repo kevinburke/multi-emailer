@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/mail"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -70,13 +71,15 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer) http.Handl
 	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
 	r.Handle(regexp.MustCompile(`^/$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
 		render(w, homepageTpl, "homepage", struct {
-			Email  string
-			Groups map[string]*Group
-			Error  string
+			Email   *mail.Address
+			Groups  map[string]*Group
+			Error   string
+			Success string
 		}{
-			Email:  auth.Email,
-			Groups: mailer.Groups,
-			Error:  GetFlashError(w, r, mailer.secretKey),
+			Email:   auth.Email,
+			Groups:  mailer.Groups,
+			Error:   GetFlashError(w, r, mailer.secretKey),
+			Success: GetFlashSuccess(w, r, mailer.secretKey),
 		})
 	}))
 	r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
@@ -106,6 +109,7 @@ type ConfigRecipient struct {
 
 type FileConfig struct {
 	SecretKey      string         `yaml:"secret_key"`
+	PublicHost     string         `yaml:"public_host"`
 	GoogleClientID string         `yaml:"google_client_id"`
 	GoogleSecret   string         `yaml:"google_secret"`
 	Groups         []*ConfigGroup `yaml:"groups"`
@@ -201,9 +205,23 @@ func main() {
 	if !ok {
 		port = "8048"
 	}
+	var host string
+	if c.PublicHost != "" {
+		u, err := url.Parse(c.PublicHost)
+		if err != nil {
+			logger.Error(err.Error())
+			os.Exit(2)
+		}
+		if u.Scheme == "" {
+			u.Scheme = "http"
+		}
+		host = u.String()
+	} else {
+		host = "http://localhost:" + port
+	}
 	cfg := google.Config{
 		SecretKey:               key,
-		BaseURL:                 "http://localhost:" + port,
+		BaseURL:                 host,
 		AllowUnencryptedTraffic: true,
 		ClientID:                c.GoogleClientID,
 		Secret:                  c.GoogleSecret,
