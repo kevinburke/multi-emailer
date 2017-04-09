@@ -35,7 +35,7 @@ func init() {
 	homepageTpl = template.Must(template.New("homepage").Parse(homepageHTML))
 }
 
-const Version = "0.3"
+const Version = "0.4"
 const DefaultPort = 8048
 
 // Static file HTTP server; all assets are packaged up in the assets directory
