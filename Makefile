@@ -23,7 +23,10 @@ race-test: lint
 	go test -race ./...
 
 serve:
-	go run main.go form.go opaque.go flash.go
+ifndef config
+	config := config.yml
+endif
+	go run main.go form.go opaque.go flash.go --config=$(config)
 
 assets:
 ifndef GO_BINDATA

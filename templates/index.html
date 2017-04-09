@@ -59,15 +59,18 @@
               </label>
             </div>
             {{ range .Groups }}
-              <div class="radio">
-                <label>
-                  <input type="radio" name="group_id" required="true" id="{{ .ID }}" value="{{ .ID }}">
-                  {{ .Name }} {{ if gt (len .Recipients) 1 }}({{ len .Recipients }} recipients){{ else }}(1 recipient){{ end }}
-                </label>
-              </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="group_id" required="true" id="{{ .ID }}" value="{{ .ID }}">
+                {{ .Name }} {{ if gt (len .Recipients) 1 }}({{ len .Recipients }} recipients){{ else }}(1 recipient){{ end }}
+              </label>
+            </div>
             {{ end }}
           </div>
         </form>
       </div>
-  </body>
-</html>
+      <footer>
+      Created by <a href="https://burke.services">Kevin Burke</a>. <a href="https://github.com/kevinburke/multi-emailer">View the source code and report errors</a>
+      </footer>
+    </body>
+  </html>

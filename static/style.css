@@ -3,3 +3,8 @@ body {
     margin: 0 auto;
     font-family: Helvetica, Arial, sans-serif;
 }
+
+footer {
+    margin-top: 40px;
+    margin-bottom: 20px;
+}

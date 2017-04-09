@@ -89,6 +89,11 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer) http.Handl
 		http.Redirect(w, r, "/", 302)
 	}))
 	r.Handle(regexp.MustCompile(`^/v1/send$`), []string{"POST"}, authenticator.Handle(mailer.sendMail))
+	// for Google App Engine
+	r.HandleFunc(regexp.MustCompile(`^/_ah/health$`), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		io.WriteString(w, "ok")
+	})
 	// Add more routes here.
 	return r
 }
@@ -252,6 +257,10 @@ func main() {
 	logger.Info("Started server", "port", c.Port)
 	mux := NewServeMux(authenticator, m)
 	mux = handlers.UUID(mux)
+	if strings.HasPrefix(c.PublicHost, "https://") {
+		mux = handlers.RedirectProto(mux)
+		mux = handlers.STS(mux)
+	}
 	mux = handlers.Server(mux, "multi-emailer/"+Version)
 	mux = handlers.Debug(mux)
 	mux = handlers.Log(mux)
