@@ -24,7 +24,7 @@ race-test: lint
 
 serve:
 ifndef config
-	config := config.yml
+	$(eval config = config.yml)
 endif
 	go run main.go form.go opaque.go flash.go --config=$(config)
 
