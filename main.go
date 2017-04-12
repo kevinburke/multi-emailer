@@ -36,7 +36,8 @@ func init() {
 }
 
 const Version = "0.5"
-const DefaultPort = 8048
+
+var DefaultPort = 8048
 
 // Static file HTTP server; all assets are packaged up in the assets directory
 // with go-bindata.
@@ -72,6 +73,8 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer) http.Handl
 	r := new(handlers.Regexp)
 	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
 	r.Handle(regexp.MustCompile(`^/$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
+		push(w, "/static/bootstrap.min.css", "style")
+		push(w, "/static/style.css", "style")
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		render(w, homepageTpl, "homepage", struct {
 			Email   *mail.Address
@@ -118,10 +121,15 @@ type ConfigRecipient struct {
 type FileConfig struct {
 	SecretKey      string         `yaml:"secret_key"`
 	PublicHost     string         `yaml:"public_host"`
+	HTTPOnly       bool           `yaml:"http_only"`
 	GoogleClientID string         `yaml:"google_client_id"`
 	GoogleSecret   string         `yaml:"google_secret"`
 	Groups         []*ConfigGroup `yaml:"groups"`
-	Port           int            `yaml:"port"`
+	Port           *int           `yaml:"port"`
+
+	// For TLS configuration.
+	CertFile string `yaml:"cert_file"`
+	KeyFile  string `yaml:"key_file"`
 }
 
 var cfg = flag.String("config", "config.yml", "Path to a config file")
@@ -210,16 +218,17 @@ func main() {
 		}
 	}
 
-	if c.Port == 0 {
+	if c.Port == nil {
 		port, ok := os.LookupEnv("PORT")
 		if ok {
-			c.Port, err = strconv.Atoi(port)
+			portStr, err := strconv.Atoi(port)
 			if err != nil {
 				logger.Error("Invalid port", "err", err, "port", port)
 				os.Exit(2)
 			}
+			c.Port = &portStr
 		} else {
-			c.Port = DefaultPort
+			c.Port = &DefaultPort
 		}
 	}
 
@@ -235,7 +244,7 @@ func main() {
 		}
 		host = u.String()
 	} else {
-		host = "http://localhost:" + strconv.Itoa(c.Port)
+		host = "http://localhost:" + strconv.Itoa(*c.Port)
 	}
 	cfg := google.Config{
 		SecretKey:               key,
@@ -249,12 +258,7 @@ func main() {
 		},
 	}
 	authenticator := google.NewAuthenticator(cfg)
-	ln, err := net.Listen("tcp", ":"+strconv.Itoa(c.Port))
-	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(2)
-	}
-	logger.Info("Started server", "port", c.Port)
+	addr := ":" + strconv.Itoa(*c.Port)
 	mux := NewServeMux(authenticator, m)
 	mux = handlers.UUID(mux)
 	if strings.HasPrefix(c.PublicHost, "https://") {
@@ -265,5 +269,31 @@ func main() {
 	mux = handlers.Debug(mux)
 	mux = handlers.Log(mux)
 	mux = handlers.Duration(mux)
-	http.Serve(ln, mux)
+	if c.HTTPOnly {
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			logger.Error("Error listening", "addr", addr, "err", err)
+			os.Exit(2)
+		}
+		logger.Info("Started server", "port", *c.Port)
+		http.Serve(ln, mux)
+	} else {
+		if c.CertFile == "" {
+			c.CertFile = "cert.pem"
+		}
+		if _, err := os.Stat(c.CertFile); os.IsNotExist(err) {
+			logger.Error("Could not find a cert file; generate using 'make generate_cert'", "file", c.CertFile)
+			os.Exit(2)
+		}
+		if c.KeyFile == "" {
+			c.KeyFile = "key.pem"
+		}
+		if _, err := os.Stat(c.KeyFile); os.IsNotExist(err) {
+			logger.Error("Could not find a key file; generate using 'make generate_cert'", "file", c.KeyFile)
+			os.Exit(2)
+		}
+		logger.Info("Starting server", "port", *c.Port)
+		listenErr := http.ListenAndServeTLS(addr, c.CertFile, c.KeyFile, mux)
+		logger.Error("server shut down", "err", listenErr)
+	}
 }

@@ -1,3 +1,4 @@
 config.yml
 releases
 app.yaml
+*.pem

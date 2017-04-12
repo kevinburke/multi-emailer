@@ -26,7 +26,7 @@ serve:
 ifndef config
 	$(eval config = config.yml)
 endif
-	go run main.go form.go opaque.go flash.go --config=$(config)
+	go install . && multi-emailer --config=$(config)
 
 assets:
 ifndef GO_BINDATA
@@ -39,6 +39,9 @@ ifndef JUSTRUN
 	go get -u github.com/jmhodges/justrun
 endif
 	justrun -v --delay=100ms -c 'make assets serve' $(WATCH_TARGETS)
+
+generate_cert:
+	go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" --host=localhost:8048,127.0.0.1:8048 --ecdsa-curve=P256 --ca=true
 
 # make release version=foo
 release: test
