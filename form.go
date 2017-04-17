@@ -18,6 +18,7 @@ import (
 
 type Recipient struct {
 	Address     *mail.Address
+	CC          []mail.Address
 	OpeningLine string // "Supervisor Kim"
 }
 
@@ -83,6 +84,7 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 			msg := &gophermail.Message{
 				From:     *auth.Email,
 				To:       []mail.Address{*to.Address},
+				Cc:       recipient.CC,
 				Subject:  subject,
 				Body:     body,
 				HTMLBody: string(html),

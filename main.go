@@ -119,8 +119,9 @@ type ConfigGroup struct {
 }
 
 type ConfigRecipient struct {
-	Email       string `yaml:"email"`
-	OpeningLine string `yaml:"opening_line"`
+	Email       string   `yaml:"email"`
+	CC          []string `yaml:"cc"`
+	OpeningLine string   `yaml:"opening_line"`
 }
 
 type FileConfig struct {
@@ -212,8 +213,18 @@ func main() {
 			if recipient.OpeningLine == "" {
 				recipient.OpeningLine = "To whom it may concern"
 			}
+			ccs := make([]mail.Address, len(recipient.CC))
+			for i := range recipient.CC {
+				ccaddr, err := mail.ParseAddress(recipient.CC[i])
+				if err != nil {
+					logger.Error("Could not parse cc email address", "err", err, "email", recipient.CC[i])
+					os.Exit(2)
+				}
+				ccs[i] = *ccaddr
+			}
 			recs[i] = &Recipient{
 				Address:     addr,
+				CC:          ccs,
 				OpeningLine: recipient.OpeningLine,
 			}
 		}

@@ -21,7 +21,7 @@ secret_key: fill-in-key
 port: 8048
 
 # What users type in their browser to reach your site (scheme+host)
-public_host: http://localhost:8048
+public_host: https://localhost:8048
 
 # To create/configure Google credentials, see
 # https://github.com/saintpete/logrole/blob/master/docs/google.md
@@ -31,6 +31,8 @@ public_host: http://localhost:8048
 # and clicking "Enable" at the top of the screen.
 google_client_id:     customdomain.apps.googleusercontent.com
 google_client_secret: W-secretkey
+
+title: My Super Awesome Multi Emailer
 
 groups:
     - id: dotcom
@@ -42,6 +44,8 @@ groups:
             opening_line: President Lincoln
           - email: Margaret Hamilton <margaret@example.com>
             opening_line: Mrs. Hamilton
+            cc:
+              - Margaret Hamilton's Aide <margaret+aide@example.com>
     - id: dotorg
       name: Dot Org Email List
       recipients:
