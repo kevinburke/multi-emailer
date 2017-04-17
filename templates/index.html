@@ -66,7 +66,7 @@
             <div class="radio">
               <label>
                 <input type="radio" name="group_id" required="true" id="{{ .ID }}" value="{{ .ID }}">
-                {{ .Name }} {{ if gt (len .Recipients) 1 }}({{ len .Recipients }} recipients){{ else }}(1 recipient){{ end }}
+                {{ .Name }} {{ if gt (len .Recipients) 1 }}({{ len .Recipients }} recipients){{ else }}(1 recipient{{ if (index .Recipients 0).CC }}, {{ len (index .Recipients 0).CC }} cc'd{{ end }}){{ end }}
               </label>
             </div>
             {{ end }}
