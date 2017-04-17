@@ -13,7 +13,11 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-6">
+          {{ if .Title }}
+          <h1>{{ .Title }}</h1>
+          {{ else }}
           <h1>multi-emailer</h1>
+          {{ end }}
         </div>
       </div>
       {{ if .Error }}
