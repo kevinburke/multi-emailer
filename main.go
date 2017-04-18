@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -72,6 +73,7 @@ type homepageData struct {
 	Error   string
 	Success string
 	Title   string
+	Version string
 }
 
 func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string) http.Handler {
@@ -91,6 +93,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			Groups:  mailer.Groups,
 			Error:   GetFlashError(w, r, mailer.secretKey),
 			Success: GetFlashSuccess(w, r, mailer.secretKey),
+			Version: runtime.Version(),
 		})
 	}))
 	r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
