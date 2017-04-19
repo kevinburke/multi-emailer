@@ -36,7 +36,7 @@ func init() {
 	homepageTpl = template.Must(template.New("homepage").Parse(homepageHTML))
 }
 
-const Version = "0.6"
+const Version = "0.7"
 
 var DefaultPort = 8048
 
