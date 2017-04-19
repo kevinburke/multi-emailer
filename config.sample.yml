@@ -32,6 +32,10 @@ public_host: https://localhost:8048
 google_client_id:     customdomain.apps.googleusercontent.com
 google_client_secret: W-secretkey
 
+# Disable Google authentication, if you want to render the homepage for local
+# development. You can't send emails if this variable is set to true.
+# no_google_auth: true
+
 title: My Super Awesome Multi Emailer
 
 groups:

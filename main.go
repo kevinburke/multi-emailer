@@ -76,26 +76,38 @@ type homepageData struct {
 	Version string
 }
 
-func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string) http.Handler {
+func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool) http.Handler {
 	staticServer := &static{
 		modTime: time.Now().UTC(),
 	}
 
-	r := new(handlers.Regexp)
-	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
-	r.Handle(regexp.MustCompile(`^/$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
+	renderHomepage := func(w http.ResponseWriter, r *http.Request, email *mail.Address) {
 		push(w, "/static/bootstrap.min.css", "style")
 		push(w, "/static/style.css", "style")
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		render(w, r, homepageTpl, "homepage", &homepageData{
 			Title:   title,
-			Email:   auth.Email,
+			Email:   email,
 			Groups:  mailer.Groups,
 			Error:   GetFlashError(w, r, mailer.secretKey),
 			Success: GetFlashSuccess(w, r, mailer.secretKey),
 			Version: runtime.Version(),
 		})
-	}))
+	}
+
+	r := new(handlers.Regexp)
+	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
+	if withGoogle {
+		r.Handle(regexp.MustCompile(`^/$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
+			renderHomepage(w, r, auth.Email)
+		}))
+	} else {
+		// For testing; no authentication.
+		testEmail, _ := mail.ParseAddress("Test Email <test@example.org>")
+		r.HandleFunc(regexp.MustCompile(`^/$`), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
+			renderHomepage(w, r, testEmail)
+		})
+	}
 	r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
 		http.Redirect(w, r, "/", 302)
 	}))
@@ -136,6 +148,9 @@ type FileConfig struct {
 	Groups         []*ConfigGroup `yaml:"groups"`
 	Port           *int           `yaml:"port"`
 	Title          string         `yaml:"title"`
+
+	// For development; ignore Google authentication.
+	NoGoogleAuth bool `yaml:"no_google_auth"`
 
 	// For TLS configuration.
 	CertFile string `yaml:"cert_file"`
@@ -279,7 +294,7 @@ func main() {
 	}
 	authenticator := google.NewAuthenticator(cfg)
 	addr := ":" + strconv.Itoa(*c.Port)
-	mux := NewServeMux(authenticator, m, c.Title)
+	mux := NewServeMux(authenticator, m, c.Title, c.NoGoogleAuth == false)
 	mux = handlers.UUID(mux)
 	if strings.HasPrefix(c.PublicHost, "https://") {
 		mux = handlers.RedirectProto(mux)
