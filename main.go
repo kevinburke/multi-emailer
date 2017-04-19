@@ -80,6 +80,11 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 	staticServer := &static{
 		modTime: time.Now().UTC(),
 	}
+	if mailer == nil {
+		mailer = &Mailer{
+			secretKey: NewRandomKey(),
+		}
+	}
 
 	renderHomepage := func(w http.ResponseWriter, r *http.Request, email *mail.Address) {
 		push(w, "/static/bootstrap.min.css", "style")
