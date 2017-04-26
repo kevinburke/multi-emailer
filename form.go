@@ -126,7 +126,7 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 					case 429, 500:
 						// TODO figure out whether this actually sends the
 						// message
-						time.Sleep(time.Duration(i) * 2 * time.Second)
+						time.Sleep(time.Duration(i+1) * 2 * time.Second)
 						continue
 					default:
 						// We failed to send a message; it happens. Shouldn't block
