@@ -17,12 +17,13 @@ import (
 	"github.com/russross/blackfriday"
 	"golang.org/x/sync/errgroup"
 	gmail "google.golang.org/api/gmail/v1"
+	"google.golang.org/api/googleapi"
 )
 
 var sema *semaphore.Semaphore
 
 func init() {
-	sema = semaphore.New(3)
+	sema = semaphore.New(2)
 }
 
 type Recipient struct {
@@ -104,20 +105,45 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 			if err != nil {
 				return err
 			}
-			call := srv.Users.Messages.Send(auth.Email.Address, &gmail.Message{
-				Raw: base64.URLEncoding.EncodeToString(raw),
-			})
-			call = call.Context(errctx)
-			sema.Acquire()
-			defer sema.Release()
-			_, doErr := call.Do()
-			if doErr == nil {
-				m.Logger.Info("Successfully sent message", "from", auth.Email.String(), "to", to.Address.String())
-			} else {
-				// We failed to send a message; it happens. Shouldn't block
-				// sending of other emails, so log and return nil.
-				m.Logger.Error("Error sending message", "from", auth.Email.String(),
-					"to", to.Address.String(), "err", fmt.Sprintf("%#v", err))
+			for i := 0; i < 3; i++ {
+				call := srv.Users.Messages.Send(auth.Email.Address, &gmail.Message{
+					Raw: base64.URLEncoding.EncodeToString(raw),
+				})
+				call = call.Context(errctx)
+				sema.Acquire()
+				_, doErr := call.Do()
+				sema.Release()
+				if doErr == nil {
+					m.Logger.Info("Successfully sent message", "from", auth.Email.String(), "to", to.Address.String())
+					return nil
+				}
+				if doErr == context.Canceled {
+					return doErr
+				}
+				switch terr := doErr.(type) {
+				case *googleapi.Error:
+					switch terr.Code {
+					case 429, 500:
+						// TODO figure out whether this actually sends the
+						// message
+						dur := time.Duration(i+1) * 2 * time.Second
+						m.Logger.Info("got retryable error", "err", terr, "code", terr.Code, "sleep_dur", dur)
+						time.Sleep(dur)
+						continue
+					default:
+						// We failed to send a message; it happens. Shouldn't block
+						// sending of other emails, so log and return nil.
+						m.Logger.Error("Error sending message", "from", auth.Email.String(),
+							"to", to.Address.String(), "err", fmt.Sprintf("%#v", terr))
+						return terr
+					}
+				default:
+					// We failed to send a message; it happens. Shouldn't block
+					// sending of other emails, so log and return nil.
+					m.Logger.Error("Error sending message", "from", auth.Email.String(),
+						"to", to.Address.String(), "err", fmt.Sprintf("%#v", terr))
+					return terr
+				}
 			}
 			return nil
 		})
