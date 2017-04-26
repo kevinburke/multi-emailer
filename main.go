@@ -23,7 +23,7 @@ import (
 	log "github.com/inconshreveable/log15"
 	google "github.com/kevinburke/google-oauth-handler"
 	"github.com/kevinburke/handlers"
-	"github.com/kevinburke/multi-emailer/assets"
+	"github.com/skylartaylor/multi-emailer/assets"
 	"github.com/kevinburke/rest"
 	gmail "google.golang.org/api/gmail/v1"
 	yaml "gopkg.in/yaml.v2"

@@ -1,7 +1,9 @@
 FROM golang
-ADD . /go/src/github.com/skylartaylor/multi-emailer
-#install mailerapp
-RUN go get github.com/skylartaylor/multi-emailer && go install github.com/skylartaylor/multi-emailer
+EXPOSE 8480
+ENTRYPOINT ["make", "watch"]
 
-#command setup
-ENTRYPOINT ["multi-emailer", "--config", "/go/src/github.com/skylartaylor/multi-emailer/config.yml"]
+RUN go get github.com/skylartaylor/multi-emailer
+WORKDIR /go/src/github.com/skylartaylor/multi-emailer
+ADD . .
+#install mailerapp
+RUN make generate_cert && go get
