@@ -126,7 +126,9 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 					case 429, 500:
 						// TODO figure out whether this actually sends the
 						// message
-						time.Sleep(time.Duration(i+1) * 2 * time.Second)
+						dur := time.Duration(i+1) * 2 * time.Second
+						m.Logger.Info("got retryable error", "err", terr, "code", terr.Code, "sleep_dur", dur)
+						time.Sleep(dur)
 						continue
 					default:
 						// We failed to send a message; it happens. Shouldn't block
