@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/mail"
 	"strings"
+	"time"
 
 	log "github.com/inconshreveable/log15"
 	"github.com/jpoehls/gophermail"
@@ -15,6 +17,12 @@ import (
 	"golang.org/x/sync/errgroup"
 	gmail "google.golang.org/api/gmail/v1"
 )
+
+var semaphore *Semaphore
+
+func init() {
+	semaphore = New(3)
+}
 
 type Recipient struct {
 	Address     *mail.Address
@@ -70,7 +78,9 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 		rest.ServerError(w, r, err)
 		return
 	}
-	eg, errctx := errgroup.WithContext(r.Context())
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	eg, errctx := errgroup.WithContext(ctx)
 	for _, recipient := range group.Recipients {
 		body := body
 		to := *recipient
@@ -97,11 +107,18 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 				Raw: base64.URLEncoding.EncodeToString(raw),
 			})
 			call = call.Context(errctx)
+			semaphore.Acquire()
+			defer semaphore.Release()
 			_, doErr := call.Do()
 			if doErr == nil {
 				m.Logger.Info("Successfully sent message", "from", auth.Email.String(), "to", to.Address.String())
+			} else {
+				// We failed to send a message; it happens. Shouldn't block
+				// sending of other emails, so log and return nil.
+				m.Logger.Error("Error sending message", "from", auth.Email.String(),
+					"to", to.Address.String(), "err", fmt.Sprintf("%#v", err))
 			}
-			return doErr
+			return nil
 		})
 	}
 	if err := eg.Wait(); err != nil {
