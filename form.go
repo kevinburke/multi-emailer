@@ -117,7 +117,7 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 				// We failed to send a message; it happens. Shouldn't block
 				// sending of other emails, so log and return nil.
 				m.Logger.Error("Error sending message", "from", auth.Email.String(),
-					"to", to.Address.String(), "err", fmt.Sprintf("%#v", err))
+					"to", to.Address.String(), "err", fmt.Sprintf("%#v", doErr))
 			}
 			return nil
 		})
