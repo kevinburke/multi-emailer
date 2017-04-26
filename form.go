@@ -13,15 +13,16 @@ import (
 	"github.com/jpoehls/gophermail"
 	google "github.com/kevinburke/google-oauth-handler"
 	"github.com/kevinburke/rest"
+	"github.com/kevinburke/semaphore"
 	"github.com/russross/blackfriday"
 	"golang.org/x/sync/errgroup"
 	gmail "google.golang.org/api/gmail/v1"
 )
 
-var semaphore *Semaphore
+var sema *semaphore.Semaphore
 
 func init() {
-	semaphore = New(3)
+	sema = semaphore.New(3)
 }
 
 type Recipient struct {
@@ -107,8 +108,8 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 				Raw: base64.URLEncoding.EncodeToString(raw),
 			})
 			call = call.Context(errctx)
-			semaphore.Acquire()
-			defer semaphore.Release()
+			sema.Acquire()
+			defer sema.Release()
 			_, doErr := call.Do()
 			if doErr == nil {
 				m.Logger.Info("Successfully sent message", "from", auth.Email.String(), "to", to.Address.String())
