@@ -38,12 +38,11 @@
         <form method="POST" action="/v1/send" />
           <div class="col-md-6">
             <p>
-            Sending messages from <b>{{ .Email }}</b>. The messages will appear
+            Messages will come from <b>{{ .Email }}</b>, and appear
             like personalized emails from your GMail account.
             </p>
-            <p>
-            If you live in an official's district, be sure to mention it as
-            public officials pay special attention to their constituents.
+            <p style="font-size:1.3em;">
+            When writing your email, <span style="font-weight:bold;">be sure to mention your address</span>, supervisors do check to see if you're a constitutent of theirs.
             </p>
             <div class="form-group">
               <label for="subject">Subject</label>
@@ -51,12 +50,25 @@
             </div>
             <div class="form-group">
               <label for="body">Body</label>
-              <textarea class="form-control" name="body" required="true" rows="10">Start typing the first paragraph here - skip the "Dear X", line, we'll fill it in.</textarea>
+              <textarea class="form-control" name="body" required="true" rows="10">I live at ADDRESS and I hope I can count on you to vote for Home-SF.
+
+After absurd delays, Supervisor Katy Tang’s Home-SF legislation is back. The legislation was formerly known as the Affordable Housing Bonus Program (AHBP) and is a local version of the State Density Bonus. Home-SF would add density along transit corridors in the City’s outlying neighborhoods. For many of these neighborhoods, it’s the first up-zoning they’ve seen in decades. The legislation gets us 30 percent subsidized housing and much more regular market rate housing. It’s a perfect example of a win-win.
+
+Market rate housing and subsidized affordable housing are NOT in competition. We can do both. This legislation is a great example of that.
+
+We need dramatically more housing, especially in our outlying neighborhoods, to address the chronic housing shortage. We cannot continue to dawdle, the need is too urgent.
+
+Please pass Home-SF. And don’t stop there. Please look for more ways to add more housing at all levels of affordability to address San Francisco’s chronic housing shortage. It’s long past time.</textarea>
               <p class="help-block">"Dear &lt;X&gt;," will be automatically inserted on the first line with the person's name.<br />Supports <a href="http://commonmark.org/help/">Markdown</a> syntax.</p>
             </div>
             <button class="btn btn-primary" type="submit">Send</button>
           </div>
           <div class="col-md-6">
+            <div class="content_above">
+              <h3>Don't know your supervisor?</h3>
+              <p>Check the map, or <a href="http://sfelections.org/tools/districts_lookup/">Enter your address.</a></p>
+              <img src="https://yimbyaction.org/wp-content/uploads/2017/04/SF_districts.png" style="width:250px; max-width:95%;">
+            </div>
             <h3>Who should we send to?</h3>
             <hr>
             <div class="radio">
@@ -66,11 +78,12 @@
               </label>
             </div>
             {{ range .Groups }}
-            <div class="radio">
+            <div class="radio test">
               <label>
                 <input type="radio" name="group_id" required="true" id="{{ .ID }}" value="{{ .ID }}">
                 {{ .Name }} {{ if gt (len .Recipients) 1 }}({{ len .Recipients }} recipients){{ else }}(1 recipient{{ if (index .Recipients 0).CC }}, {{ len (index .Recipients 0).CC }} cc'd{{ end }}){{ end }}
               </label>
+              <div class="recipientsList"></div>
             </div>
             {{ end }}
           </div>
