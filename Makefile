@@ -70,3 +70,9 @@ endif
 	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-linux-amd64 --file releases/$(version)/multi-emailer-linux-amd64 || true
 	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-darwin-amd64 --file releases/$(version)/multi-emailer-darwin-amd64 || true
 	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-windows-amd64 --file releases/$(version)/multi-emailer-windows-amd64 || true
+
+build-docker:
+	docker build -t multi-mailer .
+
+deploy: build-docker
+	docker save multi-emailer | ssh -C $(TARGET) docker load
