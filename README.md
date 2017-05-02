@@ -15,8 +15,11 @@ Here's a screenshot:
 page][releases], and copy it to the server.
 
 - Rename `config.sample.yml` to `config.yml` and populate it with values that are
-appropriate - you'll need a Google Client ID and Secret, and you'll need to
-enable the GMail API for the project you created.
+appropriate - you'll need a Google Client ID and Secret.
+
+- [Enable the GMail API][enable] for the project you created.
+
+[enable]: https://console.developers.google.com/apis/api/gmail.googleapis.com/overview
 
 - Add the groups of people you want to email. The `email` key should follow this
 format: `"First Last" <email@domain.com>`. You can also provide a plain email
