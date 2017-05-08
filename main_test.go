@@ -10,7 +10,7 @@ import (
 func TestServerRedirects(t *testing.T) {
 	mux := NewServeMux(google.NewAuthenticator(google.Config{
 		SecretKey: NewRandomKey(),
-	}), nil, "", false)
+	}), nil, "", false, "")
 	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, req)

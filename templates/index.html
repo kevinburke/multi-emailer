@@ -47,14 +47,30 @@
             </p>
             <div class="form-group">
               <label for="subject">Subject</label>
-              <input class="form-control" required="true" type="text" name="subject" value="" placeholder="Subject" />
+              <input id="subject" class="form-control" required="true" type="text" name="subject" value="{{ .Subject }}" placeholder="Subject" />
             </div>
             <div class="form-group">
               <label for="body">Body</label>
-              <textarea class="form-control" name="body" required="true" rows="10">Start typing the first paragraph here - skip the "Dear X", line, we'll fill it in.</textarea>
+              <textarea id="body" class="form-control" name="body" required="true" rows="10">
+                {{- if .Body -}}
+                  {{- .Body -}}
+                {{- else -}}
+                Start typing the first paragraph here - skip the "Dear X", line, we'll fill it in.
+                {{- end -}}
+              </textarea>
               <p class="help-block">"Dear &lt;X&gt;," will be automatically inserted on the first line with the person's name.<br />Supports <a href="http://commonmark.org/help/">Markdown</a> syntax.</p>
             </div>
-            <button class="btn btn-primary" type="submit">Send</button>
+            <div class="row">
+              <div class="col-md-4">
+                <button class="btn btn-primary" type="submit">Send</button>
+              </div>
+              <div class="col-md-8">
+                <div style="text-align: right;">
+                  <a title="Click to copy" class="clipboard" href="#">Get a shareable link for this email &#x1f4cb;</a>
+                  <input class="copy-target" type="text" value="" />
+                </div>
+              </div>
+            </div>
           </div>
           <div class="col-md-6">
             <h3>Who should we send to?</h3>
@@ -84,5 +100,41 @@
       Compiled using {{ .Version }}. <a href="https://github.com/kevinburke/multi-emailer">View the source code and report errors</a>
       </p>
       </footer>
+      <script>
+      var MultiEmailer = {};
+      MultiEmailer.PublicHost = "{{ .PublicHost }}";
+      MultiEmailer.evHandler = function(clipboardElem) {
+        return function() {
+          var pnCopy = clipboardElem.parentNode.querySelector('.copy-target');
+          if (pnCopy === null) {
+            return;
+          }
+          var subject = document.getElementById('subject').value;
+          var body = document.getElementById('body').value;
+          pnCopy.value = MultiEmailer.PublicHost+'?subject='+encodeURIComponent(subject)+'&body=' + encodeURIComponent(body);
+          pnCopy.select();
+          try {
+            result = document.execCommand('copy');
+            if (result === false) {
+              throw new Error("Could not copy value: " + pnCopy.value);
+            }
+          } catch (e) {
+            console.error(e);
+            alert("Couldn't copy text, sorry. Here it is: " + pnCopy.value);
+          }
+          alert('Copied your share URL to the clipboard');
+          pnCopy.blur();
+        };
+      };
+
+      (function() {
+        var clipboards = document.querySelectorAll('.clipboard');
+        for (var i = 0; i < clipboards.length; i++) {
+          var clipboard = clipboards[i];
+          // TODO check existing event listeners - don't want to register every time
+          clipboard.addEventListener('click', MultiEmailer.evHandler(clipboard));
+        }
+      })();
+      </script>
     </body>
   </html>

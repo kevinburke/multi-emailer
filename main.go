@@ -68,15 +68,18 @@ func render(w http.ResponseWriter, r *http.Request, tpl *template.Template, name
 }
 
 type homepageData struct {
-	Email   *mail.Address
-	Groups  map[string]*Group
-	Error   string
-	Success string
-	Title   string
-	Version string
+	Email      *mail.Address
+	Groups     map[string]*Group
+	Error      string
+	Success    string
+	Title      string
+	Version    string
+	PublicHost string
+	Subject    string
+	Body       string
 }
 
-func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool) http.Handler {
+func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool, publicHost string) http.Handler {
 	staticServer := &static{
 		modTime: time.Now().UTC(),
 	}
@@ -89,14 +92,18 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 	renderHomepage := func(w http.ResponseWriter, r *http.Request, email *mail.Address) {
 		push(w, "/static/bootstrap.min.css", "style")
 		push(w, "/static/style.css", "style")
+		vals := r.URL.Query()
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		render(w, r, homepageTpl, "homepage", &homepageData{
-			Title:   title,
-			Email:   email,
-			Groups:  mailer.Groups,
-			Error:   GetFlashError(w, r, mailer.secretKey),
-			Success: GetFlashSuccess(w, r, mailer.secretKey),
-			Version: runtime.Version(),
+			Title:      title,
+			Email:      email,
+			Groups:     mailer.Groups,
+			Error:      GetFlashError(w, r, mailer.secretKey),
+			Success:    GetFlashSuccess(w, r, mailer.secretKey),
+			Version:    runtime.Version(),
+			PublicHost: publicHost,
+			Subject:    vals.Get("subject"),
+			Body:       vals.Get("body"),
 		})
 	}
 
@@ -299,7 +306,7 @@ func main() {
 	}
 	authenticator := google.NewAuthenticator(cfg)
 	addr := ":" + strconv.Itoa(*c.Port)
-	mux := NewServeMux(authenticator, m, c.Title, c.NoGoogleAuth == false)
+	mux := NewServeMux(authenticator, m, c.Title, c.NoGoogleAuth == false, c.PublicHost)
 	mux = handlers.UUID(mux)
 	if strings.HasPrefix(c.PublicHost, "https://") {
 		mux = handlers.RedirectProto(mux)
