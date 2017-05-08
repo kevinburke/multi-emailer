@@ -93,6 +93,14 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		push(w, "/static/bootstrap.min.css", "style")
 		push(w, "/static/style.css", "style")
 		vals := r.URL.Query()
+		if vals.Get("subject") != "" || vals.Get("body") != "" {
+			setCookie(w, vals.Get("subject"), "subject", mailer.secretKey)
+			setCookie(w, vals.Get("body"), "body", mailer.secretKey)
+			http.Redirect(w, r, r.URL.Path, http.StatusFound)
+			return
+		}
+		subjCookie := getCookie(w, r, "subject", mailer.secretKey)
+		bodyCookie := getCookie(w, r, "body", mailer.secretKey)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		render(w, r, homepageTpl, "homepage", &homepageData{
 			Title:      title,
@@ -102,8 +110,8 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			Success:    GetFlashSuccess(w, r, mailer.secretKey),
 			Version:    runtime.Version(),
 			PublicHost: publicHost,
-			Subject:    vals.Get("subject"),
-			Body:       vals.Get("body"),
+			Subject:    subjCookie,
+			Body:       bodyCookie,
 		})
 	}
 
