@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"flag"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -29,9 +30,16 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+var idRxPart = "[-_a-z0-9A-Z]+"
+var homeRx = regexp.MustCompile(fmt.Sprintf(`^/(%s)?$`, idRxPart))
+var validIDRx = regexp.MustCompile(fmt.Sprintf(`^%s$`, idRxPart))
+
+var logger log.Logger
+
 var homepageTpl *template.Template
 
 func init() {
+	logger = handlers.Logger
 	homepageHTML := assets.MustAssetString("templates/index.html")
 	homepageTpl = template.Must(template.New("homepage").Parse(homepageHTML))
 }
@@ -101,11 +109,24 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		}
 		subjCookie := getCookie(w, r, "subject", mailer.secretKey)
 		bodyCookie := getCookie(w, r, "body", mailer.secretKey)
+		match := homeRx.FindStringSubmatch(r.URL.Path)
+		var groups map[string]*Group
+		if match == nil || match[1] == "" {
+			groups = mailer.Groups
+		} else {
+			if group, ok := mailer.Groups[match[1]]; !ok {
+				rest.NotFound(w, r)
+				return
+			} else {
+				groups = make(map[string]*Group)
+				groups[match[1]] = group
+			}
+		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		render(w, r, homepageTpl, "homepage", &homepageData{
 			Title:      title,
 			Email:      email,
-			Groups:     mailer.Groups,
+			Groups:     groups,
 			Error:      GetFlashError(w, r, mailer.secretKey),
 			Success:    GetFlashSuccess(w, r, mailer.secretKey),
 			Version:    runtime.Version(),
@@ -118,13 +139,13 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 	r := new(handlers.Regexp)
 	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
 	if withGoogle {
-		r.Handle(regexp.MustCompile(`^/$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
+		r.Handle(homeRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
 			renderHomepage(w, r, auth.Email)
 		}))
 	} else {
 		// For testing; no authentication.
 		testEmail, _ := mail.ParseAddress("Test Email <test@example.org>")
-		r.HandleFunc(regexp.MustCompile(`^/$`), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
+		r.HandleFunc(homeRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
 			renderHomepage(w, r, testEmail)
 		})
 	}
@@ -139,12 +160,6 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 	})
 	// Add more routes here.
 	return r
-}
-
-var logger log.Logger
-
-func init() {
-	logger = handlers.Logger
 }
 
 type ConfigGroup struct {
@@ -209,6 +224,10 @@ func getSecretKey(hexKey string) (*[32]byte, error) {
 	return secretKey, nil
 }
 
+func validID(id string) bool {
+	return validIDRx.MatchString(id)
+}
+
 func main() {
 	flag.Parse()
 	if flag.NArg() > 2 {
@@ -236,6 +255,10 @@ func main() {
 	for _, group := range c.Groups {
 		if group.ID == "" {
 			logger.Error("Please provide a group ID")
+			os.Exit(2)
+		}
+		if !validID(group.ID) {
+			logger.Error("Invalid group ID, stick to numbers and letters", "id", group.ID)
 			os.Exit(2)
 		}
 		if group.Name == "" {

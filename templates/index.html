@@ -113,7 +113,7 @@
           }
           var subject = document.getElementById('subject').value;
           var body = document.getElementById('body').value;
-          pnCopy.value = MultiEmailer.PublicHost+'?subject='+encodeURIComponent(subject)+'&body=' + encodeURIComponent(body);
+          pnCopy.value = MultiEmailer.PublicHost+document.location.pathname+'?subject='+encodeURIComponent(subject)+'&body=' + encodeURIComponent(body);
           pnCopy.select();
           try {
             result = document.execCommand('copy');
