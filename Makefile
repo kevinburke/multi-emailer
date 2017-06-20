@@ -2,6 +2,7 @@
 
 SHELL = /bin/bash
 
+DIFFER := $(shell command -v differ)
 GO_BINDATA := $(shell command -v go-bindata)
 JUSTRUN := $(shell command -v justrun)
 STATICCHECK := $(shell command -v staticcheck)
@@ -43,8 +44,14 @@ endif
 generate_cert:
 	go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" --host=localhost:8048,127.0.0.1:8048 --ecdsa-curve=P256 --ca=true
 
+diff:
+ifndef DIFFER
+	go get -u github.com/kevinburke/differ
+endif
+	differ $(MAKE) assets
+
 # make release version=foo
-release: test
+release: diff test
 ifndef version
 	@echo "Please provide a version"
 	exit 1
