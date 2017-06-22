@@ -1,3 +1,12 @@
+// multi-emailer is a tool for sending many emails at once.
+//
+// They'll be sent from your personal Gmail account, and the recipient's name
+// will be attached to the top of each email, so it looks like you hand wrote it
+// (unless you inspect the email *very* closely).
+//
+// When users visit the site they'll be redirected to a Google approval page.
+// This page will ask them for permission to send emails on their behalf. Then
+// they'll be redirected and can type away!
 package main
 
 import (
