@@ -30,6 +30,17 @@ message.
 - Start the server: `multi-emailer --config=/path/to/config.yml`. That's it!
 Logs are sent to stderr and can be redirected from there.
 
+#### Deploying to Google Cloud
+
+You should just be able to add an untracked config.yml and run `gcloud app
+deploy` and have everything work from there.
+
+#### Deploying to Other Platforms
+
+You'll probably need to tweak the project to deploy to Heroku or elsewhere. I'd
+like to help make that feasible. Please contact me directly - kev@inburke.com -
+for assistance.
+
 ## Usage
 
 When users visit the site they'll be redirected to a Google approval page. This
