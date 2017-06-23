@@ -38,6 +38,13 @@ deploy` and have everything work from there.
 
 #### Deploying to Other Platforms
 
+You can download and install the binary directly:
+
+    curl --silent --location https://github.com/kevinburke/multi-emailer/releases/download/1.0/multi-emailer-linux-amd64 > /usr/local/bin/multi-emailer && chmod 755 /usr/local/bin/multi-emailer
+
+Then run `/usr/local/bin/multi-emailer` in a directory with the config file and
+the server should start as you expect.
+
 You'll probably need to tweak the project to deploy to Heroku or elsewhere. I'd
 like to help make that feasible. Please contact me directly - kev@inburke.com -
 for assistance.
