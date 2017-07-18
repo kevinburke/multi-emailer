@@ -346,7 +346,7 @@ func main() {
 	}
 	authenticator := google.NewAuthenticator(cfg)
 	addr := ":" + strconv.Itoa(*c.Port)
-	mux := NewServeMux(authenticator, m, c.Title, c.NoGoogleAuth == false, c.PublicHost)
+	mux := NewServeMux(authenticator, m, c.Title, !c.NoGoogleAuth, c.PublicHost)
 	mux = handlers.UUID(mux)
 	if strings.HasPrefix(c.PublicHost, "https://") {
 		mux = handlers.RedirectProto(mux)

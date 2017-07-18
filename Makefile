@@ -5,23 +5,23 @@ SHELL = /bin/bash
 DIFFER := $(shell command -v differ)
 GO_BINDATA := $(shell command -v go-bindata)
 JUSTRUN := $(shell command -v justrun)
-STATICCHECK := $(shell command -v staticcheck)
+MEGACHECK := $(shell command -v megacheck)
 
 # Add files that change frequently to this list.
 WATCH_TARGETS = static/style.css templates/index.html main.go form.go
 
 lint:
-ifndef STATICCHECK
-	go get -u honnef.co/go/tools/cmd/staticcheck
+ifndef MEGACHECK
+	go get -u honnef.co/go/tools/cmd/megacheck
 endif
-	go vet ./...
-	staticcheck ./...
+	go list ./... | grep -v vendor | xargs go vet
+	go list ./... | grep -v vendor | xargs megacheck
 
 test: lint
-	go test ./...
+	go list ./... | grep -v vendor | xargs go test
 
 race-test: lint
-	go test -race ./...
+	go list ./... | grep -v vendor | xargs go test -race
 
 serve:
 ifndef config
