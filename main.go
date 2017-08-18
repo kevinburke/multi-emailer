@@ -179,7 +179,7 @@ type ConfigGroup struct {
 
 type ConfigRecipient struct {
 	Email       string   `yaml:"email"`
-	CC          []string `yaml:"cc"`
+	CC          []string `yaml:"cc,omitempty"`
 	OpeningLine string   `yaml:"opening_line"`
 }
 
