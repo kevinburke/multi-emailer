@@ -1,21 +1,32 @@
 .PHONY: assets static templates
 
-SHELL = /bin/bash
+SHELL = /bin/bash -o pipefail
 
-DIFFER := $(shell command -v differ)
-GO_BINDATA := $(shell command -v go-bindata)
-JUSTRUN := $(shell command -v justrun)
-MEGACHECK := $(shell command -v megacheck)
+DIFFER := $(GOPATH)/bin/differ
+GO_BINDATA := $(GOPATH)/bin/go-bindata
+JUSTRUN := $(GOPATH)/bin/justrun
+MEGACHECK := $(GOPATH)/bin/megacheck
 
 # Add files that change frequently to this list.
 WATCH_TARGETS = static/style.css templates/index.html main.go form.go
 
-lint:
-ifndef MEGACHECK
-	go get -u honnef.co/go/tools/cmd/megacheck
+$(GOPATH)/bin:
+	mkdir -p $(GOPATH)/bin
+
+UNAME := $(shell uname)
+
+$(MEGACHECK): | $(GOPATH)/bin
+ifeq ($(UNAME), Darwin)
+	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-darwin-amd64
 endif
+ifeq ($(UNAME), Linux)
+	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-linux-amd64
+endif
+	chmod 755 $(MEGACHECK)
+
+lint: $(MEGACHECK)
 	go list ./... | grep -v vendor | xargs go vet
-	go list ./... | grep -v vendor | xargs megacheck
+	go list ./... | grep -v vendor | xargs $(MEGACHECK)
 
 test: lint
 	go list ./... | grep -v vendor | xargs go test
@@ -29,29 +40,35 @@ ifndef config
 endif
 	go install . && multi-emailer --config=$(config)
 
-assets:
-ifndef GO_BINDATA
+$(GO_BINDATA): | $(GOPATH)/bin
 	go get -u github.com/jteeuwen/go-bindata/...
-endif
-	go-bindata -o=assets/bindata.go --nometadata --pkg=assets templates/... static/...
 
-watch:
-ifndef JUSTRUN
+assets: $(GO_BINDATA)
+	$(GO_BINDATA) -o=assets/bindata.go --nometadata --pkg=assets templates/... static/...
+
+$(JUSTRUN):
 	go get -u github.com/jmhodges/justrun
-endif
-	justrun -v --delay=100ms -c 'make assets serve' $(WATCH_TARGETS)
+
+watch: $(JUSTRUN)
+	$(JUSTRUN) -v --delay=100ms -c 'make assets serve' $(WATCH_TARGETS)
 
 generate_cert:
 	go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" --host=localhost:8048,127.0.0.1:8048 --ecdsa-curve=P256 --ca=true
 
-diff:
-ifndef DIFFER
+$(DIFFER):
 	go get -u github.com/kevinburke/differ
-endif
-	differ $(MAKE) assets
+
+diff: $(DIFFER)
+	$(DIFFER) $(MAKE) assets
+
+$(BUMP_VERSION):
+	go get -u github.com/Shyp/bump_version
+
+$(RELEASE):
+	go get -u github.com/aktau/github-release
 
 # make release version=foo
-release: diff test
+release: diff test | $(BUMP_VERSION) $(RELEASE)
 ifndef version
 	@echo "Please provide a version"
 	exit 1
@@ -60,20 +77,14 @@ ifndef GITHUB_TOKEN
 	@echo "Please set GITHUB_TOKEN in the environment"
 	exit 1
 endif
-ifndef BUMP_VERSION
-	go get github.com/Shyp/bump_version
-endif
-	bump_version --version=$(version) main.go
+	$(BUMP_VERSION) --version=$(version) main.go
 	git push origin --tags
 	mkdir -p releases/$(version)
 	GOOS=linux GOARCH=amd64 go build -o releases/$(version)/multi-emailer-linux-amd64 .
 	GOOS=darwin GOARCH=amd64 go build -o releases/$(version)/multi-emailer-darwin-amd64 .
 	GOOS=windows GOARCH=amd64 go build -o releases/$(version)/multi-emailer-windows-amd64 .
-ifndef RELEASE
-	go get -u github.com/aktau/github-release
-endif
 	# these commands are not idempotent so ignore failures if an upload repeats
-	github-release release --user kevinburke --repo multi-emailer --tag $(version) || true
-	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-linux-amd64 --file releases/$(version)/multi-emailer-linux-amd64 || true
-	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-darwin-amd64 --file releases/$(version)/multi-emailer-darwin-amd64 || true
-	github-release upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-windows-amd64 --file releases/$(version)/multi-emailer-windows-amd64 || true
+	$(RELEASE) release --user kevinburke --repo multi-emailer --tag $(version) || true
+	$(RELEASE) upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-linux-amd64 --file releases/$(version)/multi-emailer-linux-amd64 || true
+	$(RELEASE) upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-darwin-amd64 --file releases/$(version)/multi-emailer-darwin-amd64 || true
+	$(RELEASE) upload --user kevinburke --repo multi-emailer --tag $(version) --name multi-emailer-windows-amd64 --file releases/$(version)/multi-emailer-windows-amd64 || true
