@@ -2,5 +2,4 @@ config.yml
 releases
 app.yaml
 *.pem
-/vendor/*/
 /cfgs/*.yml
