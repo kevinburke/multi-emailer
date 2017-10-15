@@ -4,26 +4,26 @@
 [[projects]]
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
-  revision = "a5913b3f7deecba45e98ff33cefbac4fd204ddd7"
-  version = "v0.10.0"
+  revision = "eaddaf6dd7ee35fd3c2420c8d27478db176b0485"
+  version = "v0.15.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/aristanetworks/goarista"
-  packages = ["monotime"]
-  revision = "8ab803d6502ea1e05a8c9b73193b405291efb7ce"
+  name = "github.com/go-stack/stack"
+  packages = ["."]
+  revision = "817915b46b97fd7bb80e8ab6b69f01a53ac3eebf"
+  version = "v1.6.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "0a4f71a498b7c4812f64969510bcb4eca251e33a"
+  revision = "130e6b02ab059e7b717a096f397c5b60111cae74"
 
 [[projects]]
   name = "github.com/inconshreveable/log15"
   packages = [".","term"]
-  revision = "b105bd37f74e5d9dc7b6ad7806715c7a2b83fd3f"
-  version = "v2.11"
+  revision = "0e4443bab83dd915f5a6d36d8c650b180744b8ce"
+  version = "v2.12"
 
 [[projects]]
   branch = "master"
@@ -40,8 +40,8 @@
 [[projects]]
   name = "github.com/kevinburke/handlers"
   packages = ["."]
-  revision = "b68f4173c7e0843592cc3ac4ea1c066acb327ad5"
-  version = "0.29"
+  revision = "bfb418526a15e2fa6e38e8fa7eabb815e3675993"
+  version = "0.31"
 
 [[projects]]
   name = "github.com/kevinburke/rest"
@@ -58,32 +58,26 @@
 [[projects]]
   name = "github.com/mattn/go-colorable"
   packages = ["."]
-  revision = "941b50ebc6efddf4c41c8e4537a5f68a4e686b24"
-  version = "v0.0.8"
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
   packages = ["."]
-  revision = "fc9e8d8ef48496124e79ae0df75490096eccf6fe"
-  version = "v0.0.2"
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
-  revision = "0b647d0506a698cca42caca173e55559b12a69f2"
-  version = "v1.4"
+  revision = "4048872b16cc0fc2c5fd9eacf0ed2c2fedaa0c8c"
+  version = "v1.5"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
   version = "v1.1.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/shurcooL/sanitized_anchor_name"
-  packages = ["."]
-  revision = "541ff5ee47f1dddf6a5281af78307d921524bcb5"
 
 [[projects]]
   branch = "master"
@@ -95,37 +89,37 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["nacl/secretbox","poly1305","salsa20/salsa"]
-  revision = "7f7c0c2d75ebb4e32a21396ce36e87b6dadc91c9"
+  revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp"]
-  revision = "5d0d7096b5f2ef7ba83f319c07ef63989a1c6f91"
+  revision = "a04bdaca5b32abe1c069418fb7088ae607de5bd0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","google","internal","jws","jwt"]
-  revision = "cce311a261e6fcf29de72ca96827bdb0b7d9c9e6"
+  revision = "bb50c06baba3d0c76f9d125c0719093e315b5b44"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
-  revision = "f52d1811a62927559de87708c8913c1650ce4f26"
+  revision = "8e0aa688b654ef28caa72506fa5ec8dba9fc7690"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "cd2c276457edda6df7fb04895d3fd6a6add42926"
+  revision = "686000749eaec0b8855b8eef5336cf63899fe51d"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/api"
   packages = ["gensupport","gmail/v1","googleapi","googleapi/internal/uritemplates"]
-  revision = "295e4bb0ade057ae2cfb9876ab0b54635dbfcea4"
+  revision = "9e2045da407b8bc1df9bc5c14d4d1a7e7e182e05"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -134,20 +128,14 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "gopkg.in/inconshreveable/log15.v2"
-  packages = ["stack","term"]
-  revision = "dc7890abeaadcb6a79a9a5ee30bc1897bbf97713"
-  version = "v2.10"
-
-[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "3b4ad1db5b2a649883ff3782f5f9f6fb52be71af"
+  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6cd09e523f9007dae69e8a4320fea392706aff5170495343649fd99e51659763"
+  inputs-digest = "fb3fbdb27a69dfed1cf6384230f37c320bff4df93358ea38e7627b746e584a6c"
   solver-name = "gps-cdcl"
   solver-version = 1
