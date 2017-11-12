@@ -22,8 +22,8 @@
 [[projects]]
   name = "github.com/inconshreveable/log15"
   packages = [".","term"]
-  revision = "0e4443bab83dd915f5a6d36d8c650b180744b8ce"
-  version = "v2.12"
+  revision = "0decfc6c20d9ca0ad143b0e89dcaa20f810b4fb3"
+  version = "v2.13"
 
 [[projects]]
   branch = "master"
@@ -123,7 +123,7 @@
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = [".","internal","internal/app_identity","internal/base","internal/datastore","internal/log","internal/modules","internal/remote_api","internal/urlfetch","urlfetch"]
+  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","log"]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
 
@@ -136,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fb3fbdb27a69dfed1cf6384230f37c320bff4df93358ea38e7627b746e584a6c"
+  inputs-digest = "a4791b43e97b6ca2f1821cf8f073c77365dc835f5966615ddcf64705eb7b9127"
   solver-name = "gps-cdcl"
   solver-version = 1
