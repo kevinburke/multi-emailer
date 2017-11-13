@@ -2,8 +2,8 @@ go_import_path: github.com/kevinburke/multi-emailer
 language: go
 
 go:
-  - 1.8
-  - 1.9
+  - 1.8.x
+  - 1.9.x
   - tip
 
 script: make diff race-test
