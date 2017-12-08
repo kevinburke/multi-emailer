@@ -2,10 +2,12 @@
 
 SHELL = /bin/bash -o pipefail
 
+BUMP_VERSION := $(GOPATH)/bin/bump_version
 DIFFER := $(GOPATH)/bin/differ
 GO_BINDATA := $(GOPATH)/bin/go-bindata
 JUSTRUN := $(GOPATH)/bin/justrun
 MEGACHECK := $(GOPATH)/bin/megacheck
+RELEASE := $(GOPATH)/bin/github-release
 
 # Add files that change frequently to this list.
 WATCH_TARGETS = static/style.css templates/index.html main.go form.go
