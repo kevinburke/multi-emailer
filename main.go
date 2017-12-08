@@ -95,7 +95,7 @@ type homepageData struct {
 	Body       string
 }
 
-func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool, publicHost string) http.Handler {
+func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool, publicHost string, siteVerification string) http.Handler {
 	staticServer := &static{
 		modTime: time.Now().UTC(),
 	}
@@ -146,6 +146,12 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 
 	r := new(handlers.Regexp)
 	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
+	if siteVerification != "" {
+		r.HandleFunc(regexp.MustCompile("/"+regexp.QuoteMeta(siteVerification)), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			io.WriteString(w, "google-site-verification: "+siteVerification)
+		})
+	}
 	if withGoogle {
 		r.Handle(homeRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
 			renderHomepage(w, r, auth.Email)
@@ -198,6 +204,11 @@ type FileConfig struct {
 	// For TLS configuration.
 	CertFile string `yaml:"cert_file"`
 	KeyFile  string `yaml:"key_file"`
+
+	// Should be a string like "google4f9d0c78202b2454.html". If non-empty and
+	// not starting with "google", it will be prepended. If it does not end with
+	// ".html", ".html" will be appended.
+	GoogleSiteVerification string `yaml:"google_site_verification"`
 }
 
 var cfg = flag.String("config", "config.yml", "Path to a config file")
@@ -244,14 +255,13 @@ func commonMain() (*FileConfig, http.Handler) {
 	}
 
 	data, err := ioutil.ReadFile(*cfg)
-	c := new(FileConfig)
-	if err == nil {
-		if err := yaml.Unmarshal(data, c); err != nil {
-			logger.Error("Couldn't parse config file", "err", err)
-			os.Exit(2)
-		}
-	} else {
+	if err != nil {
 		logger.Error("Couldn't find config file", "err", err)
+		os.Exit(2)
+	}
+	c := new(FileConfig)
+	if err := yaml.Unmarshal(data, c); err != nil {
+		logger.Error("Couldn't parse config file", "err", err)
 		os.Exit(2)
 	}
 	key, err := getSecretKey(c.SecretKey)
@@ -343,7 +353,15 @@ func commonMain() (*FileConfig, http.Handler) {
 		},
 	}
 	authenticator := google.NewAuthenticator(cfg)
-	mux := NewServeMux(authenticator, m, c.Title, !c.NoGoogleAuth, c.PublicHost)
+	if c.GoogleSiteVerification != "" {
+		if !strings.HasPrefix(c.GoogleSiteVerification, "google") {
+			c.GoogleSiteVerification = "google" + c.GoogleSiteVerification
+		}
+		if !strings.HasSuffix(c.GoogleSiteVerification, ".html") {
+			c.GoogleSiteVerification = c.GoogleSiteVerification + ".html"
+		}
+	}
+	mux := NewServeMux(authenticator, m, c.Title, !c.NoGoogleAuth, c.PublicHost, c.GoogleSiteVerification)
 	mux = handlers.UUID(mux)
 	if strings.HasPrefix(c.PublicHost, "https://") {
 		mux = handlers.RedirectProto(mux)
