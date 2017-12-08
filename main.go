@@ -66,6 +66,12 @@ func (s *static) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/favicon.ico" {
 		r.URL.Path = "/static/favicon.ico"
 	}
+	if r.URL.Path == "/privacy" {
+		r.URL.Path = "/static/privacy.html"
+	}
+	if r.URL.Path == "/terms-of-service" {
+		r.URL.Path = "/static/license.txt"
+	}
 	bits, err := assets.Asset(strings.TrimPrefix(r.URL.Path, "/"))
 	if err != nil {
 		rest.NotFound(w, r)
@@ -145,7 +151,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 	}
 
 	r := new(handlers.Regexp)
-	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$)`), []string{"GET"}, handlers.GZip(staticServer))
+	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$|^/privacy$|^/terms-of-service$)`), []string{"GET"}, handlers.GZip(staticServer))
 	if siteVerification != "" {
 		r.HandleFunc(regexp.MustCompile("/"+regexp.QuoteMeta(siteVerification)), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -172,7 +178,6 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		w.Header().Set("Content-Type", "text/plain")
 		io.WriteString(w, "ok")
 	})
-	// Add more routes here.
 	return r
 }
 

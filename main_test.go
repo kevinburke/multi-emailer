@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	google "github.com/kevinburke/google-oauth-handler"
@@ -32,6 +33,21 @@ func TestSiteVerification(t *testing.T) {
 	want := "google-site-verification: google4f9d0c78202b2454.html"
 	if b := w.Body.String(); b != want {
 		t.Errorf("site verification: got %s, want %s", b, want)
+	}
+}
+
+func TestPrivacyPolicy(t *testing.T) {
+	mux := NewServeMux(google.NewAuthenticator(google.Config{
+		SecretKey: NewRandomKey(),
+	}), nil, "", false, "", "")
+	req := httptest.NewRequest("GET", "/privacy", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	if w.Code != 200 {
+		t.Errorf("GET /privacy: got code %d, want 200", w.Code)
+	}
+	if b := w.Body.String(); !strings.Contains(b, "<h1>Privacy Policy</h1>") {
+		t.Errorf("privacy policy: should see <h1>Privacy</h1>, got %s", b)
 	}
 }
 

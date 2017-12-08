@@ -45,7 +45,7 @@ endif
 $(GO_BINDATA): | $(GOPATH)/bin
 	go get -u github.com/kevinburke/go-bindata/...
 
-assets: $(GO_BINDATA)
+assets: static/license.txt static/privacy.html | $(GO_BINDATA)
 	$(GO_BINDATA) -o=assets/bindata.go --nometadata --pkg=assets templates/... static/...
 
 $(JUSTRUN):
@@ -57,11 +57,17 @@ watch: $(JUSTRUN)
 generate_cert:
 	go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" --host=localhost:8048,127.0.0.1:8048 --ecdsa-curve=P256 --ca=true
 
+static/privacy.html: privacy-policy.md
+	markdown privacy-policy.md > static/privacy.html
+
+static/license.txt: LICENSE
+	cp -f LICENSE static/license.txt
+
 $(DIFFER):
 	go get -u github.com/kevinburke/differ
 
 diff: $(DIFFER)
-	$(DIFFER) $(MAKE) assets
+	$(DIFFER) $(MAKE) assets static/privacy.html
 
 $(BUMP_VERSION):
 	go get -u github.com/Shyp/bump_version
