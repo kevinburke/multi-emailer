@@ -39,7 +39,13 @@ import (
 )
 
 var idRxPart = "[-_a-z0-9A-Z]+"
+
+// GET /
+// GET /id
 var homeRx = regexp.MustCompile(fmt.Sprintf(`^/(%s)?$`, idRxPart))
+
+// GET /<id>/recipients
+var recipientsRx = regexp.MustCompile(fmt.Sprintf(`^/(%s)/recipients$`, idRxPart))
 var validIDRx = regexp.MustCompile(fmt.Sprintf(`^%s$`, idRxPart))
 
 var logger log.Logger
@@ -99,6 +105,7 @@ type homepageData struct {
 	PublicHost string
 	Subject    string
 	Body       string
+	IsHomepage bool
 }
 
 func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool, publicHost string, siteVerification string) http.Handler {
@@ -109,6 +116,22 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		mailer = &Mailer{
 			secretKey: NewRandomKey(),
 		}
+	}
+
+	renderRecipients := func(w http.ResponseWriter, r *http.Request) {
+		match := recipientsRx.FindStringSubmatch(r.URL.Path)
+		group, ok := mailer.Groups[match[1]]
+		if !ok {
+			rest.NotFound(w, r)
+			return
+		}
+		data, err := yaml.Marshal(group.Recipients)
+		if err != nil {
+			rest.ServerError(w, r, err)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write(data)
 	}
 
 	renderHomepage := func(w http.ResponseWriter, r *http.Request, email *mail.Address) {
@@ -147,6 +170,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			PublicHost: publicHost,
 			Subject:    subjCookie,
 			Body:       bodyCookie,
+			IsHomepage: r.URL.Path == "/",
 		})
 	}
 
@@ -162,11 +186,17 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		r.Handle(homeRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
 			renderHomepage(w, r, auth.Email)
 		}))
+		r.Handle(recipientsRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
+			renderRecipients(w, r)
+		}))
 	} else {
 		// For testing; no authentication.
 		testEmail, _ := mail.ParseAddress("Test Email <test@example.org>")
 		r.HandleFunc(homeRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
 			renderHomepage(w, r, testEmail)
+		})
+		r.HandleFunc(recipientsRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
+			renderRecipients(w, r)
 		})
 	}
 	r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
@@ -307,7 +337,7 @@ func commonMain() (*FileConfig, http.Handler) {
 				ccs[i] = *ccaddr
 			}
 			recs[i] = &Recipient{
-				Address:     addr,
+				Address:     *addr,
 				CC:          ccs,
 				OpeningLine: recipient.OpeningLine,
 			}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http/httptest"
+	"net/mail"
 	"strings"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 )
 
 func TestServerReturns200(t *testing.T) {
+	t.Parallel()
 	mux := NewServeMux(google.NewAuthenticator(google.Config{
 		SecretKey: NewRandomKey(),
 	}), nil, "", false, "", "")
@@ -21,6 +23,7 @@ func TestServerReturns200(t *testing.T) {
 }
 
 func TestSiteVerification(t *testing.T) {
+	t.Parallel()
 	mux := NewServeMux(google.NewAuthenticator(google.Config{
 		SecretKey: NewRandomKey(),
 	}), nil, "", false, "", "google4f9d0c78202b2454.html")
@@ -37,6 +40,7 @@ func TestSiteVerification(t *testing.T) {
 }
 
 func TestPrivacyPolicy(t *testing.T) {
+	t.Parallel()
 	mux := NewServeMux(google.NewAuthenticator(google.Config{
 		SecretKey: NewRandomKey(),
 	}), nil, "", false, "", "")
@@ -48,6 +52,44 @@ func TestPrivacyPolicy(t *testing.T) {
 	}
 	if b := w.Body.String(); !strings.Contains(b, "<h1>Privacy Policy</h1>") {
 		t.Errorf("privacy policy: should see <h1>Privacy</h1>, got %s", b)
+	}
+}
+
+var group *Group
+
+func init() {
+	addr, _ := mail.ParseAddress("Recipient <recipient@example.com>")
+	cc, _ := mail.ParseAddress("CC <cc@example.com>")
+	group = &Group{
+		Recipients: []*Recipient{{*addr, []mail.Address{*cc}, "Dear Test Group"}},
+		ID:         "test-group-slug",
+		Name:       "Test Group Slug",
+	}
+}
+
+func TestRecipients(t *testing.T) {
+	mailer := &Mailer{Groups: map[string]*Group{
+		"test-group-slug": group,
+	}}
+	mux := NewServeMux(google.NewAuthenticator(google.Config{
+		SecretKey: NewRandomKey(),
+	}), mailer, "", false, "", "")
+	req := httptest.NewRequest("GET", "/test-group-slug/recipients", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	if w.Code != 200 {
+		t.Errorf("GET /test-group-slug: got code %d, want 200", w.Code)
+	}
+	want := `- address:
+    name: Recipient
+    address: recipient@example.com
+  cc:
+  - name: CC
+    address: cc@example.com
+  opening_line: Dear Test Group
+`
+	if b := w.Body.String(); b != want {
+		t.Errorf("recipients: should be\n%q\n, got\n%q\n", want, b)
 	}
 }
 
@@ -63,6 +105,7 @@ var idTests = []struct {
 }
 
 func TestValidID(t *testing.T) {
+	t.Parallel()
 	for _, tt := range idTests {
 		got := validID(tt.in)
 		if got != tt.want {

@@ -27,9 +27,12 @@ func init() {
 }
 
 type Recipient struct {
-	Address     *mail.Address
-	CC          []mail.Address
-	OpeningLine string // "Supervisor Kim"
+	// We marshal this in the /recipients endpoint, so it gets struct tags too.
+	// In theory I could find the passed in config, but eh.
+
+	Address     mail.Address   `yaml:"address"`
+	CC          []mail.Address `yaml:"cc"`
+	OpeningLine string         `yaml:"opening_line"` // "Supervisor Kim"
 }
 
 type Group struct {
@@ -65,7 +68,7 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 	if id == "test" {
 		group = &Group{
 			Recipients: []*Recipient{
-				&Recipient{Address: auth.Email, OpeningLine: "Hi test"},
+				&Recipient{Address: *auth.Email, OpeningLine: "Hi test"},
 			},
 		}
 	} else {
@@ -95,7 +98,7 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 			body := line + "\n\n" + body
 			msg := &gophermail.Message{
 				From:     *auth.Email,
-				To:       []mail.Address{*to.Address},
+				To:       []mail.Address{to.Address},
 				Cc:       recipient.CC,
 				Subject:  subject,
 				Body:     body,

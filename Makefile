@@ -10,7 +10,10 @@ MEGACHECK := $(GOPATH)/bin/megacheck
 RELEASE := $(GOPATH)/bin/github-release
 
 # Add files that change frequently to this list.
-WATCH_TARGETS = static/style.css templates/index.html main.go form.go
+WATCH_TARGETS = $(shell find ./static ./templates -type f)
+GO_FILES = $(shell find . -name '*.go')
+GO_NOASSET_FILES := $(filter-out ./assets/bindata.go,$(GO_FILES))
+
 
 $(GOPATH)/bin:
 	mkdir -p $(GOPATH)/bin
@@ -36,11 +39,14 @@ test: lint
 race-test: lint
 	go list ./... | grep -v vendor | xargs go test -race
 
-serve:
+$(GOPATH)/bin/multi-emailer: $(GO_FILES) | $(GOPATH)/bin
+	go install .
+
+serve: $(GOPATH)/bin/multi-emailer
 ifndef config
 	$(eval config = config.yml)
 endif
-	go install . && multi-emailer --config=$(config)
+	$(GOPATH)/bin/multi-emailer --config=$(config)
 
 $(GO_BINDATA): | $(GOPATH)/bin
 	go get -u github.com/kevinburke/go-bindata/...
@@ -48,11 +54,11 @@ $(GO_BINDATA): | $(GOPATH)/bin
 assets: static/license.txt static/privacy.html | $(GO_BINDATA)
 	$(GO_BINDATA) -o=assets/bindata.go --nometadata --pkg=assets templates/... static/...
 
-$(JUSTRUN):
+$(JUSTRUN): | $(GOPATH)/bin
 	go get -u github.com/jmhodges/justrun
 
-watch: $(JUSTRUN)
-	$(JUSTRUN) -v --delay=100ms -c 'make assets serve' $(WATCH_TARGETS)
+watch: | $(JUSTRUN)
+	$(JUSTRUN) -v --delay=100ms -c 'make assets serve' $(WATCH_TARGETS) $(GO_NOASSET_FILES)
 
 generate_cert:
 	go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" --host=localhost:8048,127.0.0.1:8048 --ecdsa-curve=P256 --ca=true
