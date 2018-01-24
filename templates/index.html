@@ -52,12 +52,12 @@
               <input id="subject" class="form-control" required="true" type="text" name="subject" value="{{ .Subject }}" placeholder="Subject" />
             </div>
             <div class="form-group">
-              <label for="body">Body</label>
+              <label for="body">{{ if .OpeningLine }}{{ .OpeningLine }},{{ else }}Mayor/Councilmember/Supervisor <i>(names auto-personalized by tool on send)</i>,{{ end }}</label>
               <textarea id="body" class="form-control" name="body" required="true" rows="10">
                 {{- if .Body -}}
                   {{- .Body -}}
                 {{- else -}}
-                Start typing the first paragraph here - skip the "Dear X", line, we'll fill it in.
+                Start typing the first paragraph right here. "I am a &lt;X&gt; and I live in &lt;Y&gt;. I'm concerned about..."
                 {{- end -}}
               </textarea>
               <p class="help-block">"Dear &lt;X&gt;," will be automatically inserted on the first line with the person's name.<br />Supports <a href="http://commonmark.org/help/">Markdown</a> syntax.</p>

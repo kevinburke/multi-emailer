@@ -106,6 +106,8 @@ type homepageData struct {
 	Subject    string
 	Body       string
 	IsHomepage bool
+	// If there's only one group and one recipient, put opening line there
+	OpeningLine string
 }
 
 func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool, publicHost string, siteVerification string) http.Handler {
@@ -159,18 +161,28 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 				groups[match[1]] = group
 			}
 		}
+		var openingLine string
+		if len(groups) == 1 {
+			for k := range groups {
+				if len(groups[k].Recipients) == 1 {
+					openingLine = groups[k].Recipients[0].OpeningLine
+				}
+				break
+			}
+		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		render(w, r, homepageTpl, "homepage", &homepageData{
-			Title:      title,
-			Email:      email,
-			Groups:     groups,
-			Error:      GetFlashError(w, r, mailer.secretKey),
-			Success:    GetFlashSuccess(w, r, mailer.secretKey),
-			Version:    runtime.Version(),
-			PublicHost: publicHost,
-			Subject:    subjCookie,
-			Body:       bodyCookie,
-			IsHomepage: r.URL.Path == "/",
+			Title:       title,
+			Email:       email,
+			Groups:      groups,
+			Error:       GetFlashError(w, r, mailer.secretKey),
+			Success:     GetFlashSuccess(w, r, mailer.secretKey),
+			Version:     runtime.Version(),
+			PublicHost:  publicHost,
+			Subject:     subjCookie,
+			Body:        bodyCookie,
+			IsHomepage:  r.URL.Path == "/",
+			OpeningLine: openingLine,
 		})
 	}
 
