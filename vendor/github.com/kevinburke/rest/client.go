@@ -21,7 +21,7 @@ var JSON UploadType = "application/json"
 // FormURLEncoded specifies you'd like to upload form-urlencoded data.
 var FormURLEncoded UploadType = "application/x-www-form-urlencoded"
 
-const Version = "1.0"
+const Version = "1.1"
 
 var defaultTimeout = 6500 * time.Millisecond
 
@@ -35,15 +35,20 @@ func init() {
 
 // Client is a generic Rest client for making HTTP requests.
 type Client struct {
-	ID     string
-	Token  string
+	// Username for use in HTTP Basic Auth
+	ID string
+	// Password for use in HTTP Basic Auth
+	Token string
+	// HTTP Client to use for making requests
 	Client *http.Client
-	Base   string
+	// The base URL for all requests to this API, for example,
+	// "https://fax.twilio.com/v1"
+	Base string
 	// Set UploadType to JSON or FormURLEncoded to control how data is sent to
-	// the server.
+	// the server. Defaults to FormURLEncoded.
 	UploadType UploadType
 	// ErrorParser is invoked when the client gets a 400-or-higher status code
-	// from the server.
+	// from the server. Defaults to rest.DefaultErrorParser.
 	ErrorParser func(*http.Response) error
 }
 

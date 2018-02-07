@@ -25,11 +25,11 @@ import (
 	"time"
 
 	log "github.com/inconshreveable/log15"
+	"github.com/kevinburke/go.uuid"
 	"github.com/kevinburke/rest"
-	"github.com/satori/go.uuid"
 )
 
-const Version = "0.31"
+const Version = "0.36"
 
 func push(w http.ResponseWriter, target string, opts *http.PushOptions) error {
 	if pusher, ok := w.(http.Pusher); ok {
@@ -347,9 +347,13 @@ func WithLogger(h http.Handler, logger log.Logger) http.Handler {
 func RedirectProto(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-Forwarded-Proto") == "http" {
-			r.URL.Scheme = "https"
-			r.URL.Host = r.Host
-			http.Redirect(w, r, r.URL.String(), http.StatusFound)
+			r2 := new(http.Request)
+			*r2 = *r
+			r2.URL = new(url.URL)
+			*r2.URL = *r.URL
+			r2.URL.Scheme = "https"
+			r2.URL.Host = r.Host
+			http.Redirect(w, r2, r2.URL.String(), http.StatusFound)
 			return
 		}
 		h.ServeHTTP(w, r)

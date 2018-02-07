@@ -3,9 +3,10 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/kevinburke/go.uuid"
 )
 
 type ctxVar int
@@ -16,8 +17,10 @@ var startTime ctxVar = 1
 // SetRequestID sets the given UUID on the request context and returns the
 // modified HTTP request.
 func SetRequestID(r *http.Request, u uuid.UUID) *http.Request {
-	r.Header.Set("X-Request-Id", u.String())
-	return r.WithContext(context.WithValue(r.Context(), requestID, u))
+	r2 := new(http.Request)
+	*r2 = *r
+	r2.Header.Set("X-Request-Id", u.String())
+	return r2.WithContext(context.WithValue(r2.Context(), requestID, u))
 }
 
 // GetRequestID returns a UUID (if it exists in the context) or false if none
@@ -68,8 +71,8 @@ type startWriter struct {
 }
 
 func (s *startWriter) duration() string {
-	d := time.Since(s.start)%(100*time.Microsecond) + 100*time.Microsecond
-	return d.String()
+	d := time.Since(s.start) / (100 * time.Microsecond) * 100 * time.Microsecond
+	return strings.Replace(d.String(), "µ", "u", 1)
 }
 
 func (s *startWriter) WriteHeader(code int) {
@@ -109,8 +112,10 @@ func Duration(h http.Handler) http.Handler {
 			start:       time.Now().UTC(),
 			wroteHeader: false,
 		}
-		r = r.WithContext(context.WithValue(r.Context(), startTime, sw.start))
-		h.ServeHTTP(sw, r)
+		r2 := new(http.Request)
+		*r2 = *r
+		r2 = r2.WithContext(context.WithValue(r2.Context(), startTime, sw.start))
+		h.ServeHTTP(sw, r2)
 	})
 }
 
@@ -125,7 +130,9 @@ func WithTimeout(h http.Handler, timeout time.Duration) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), timeout)
 		defer cancel()
-		r = r.WithContext(ctx)
-		h.ServeHTTP(w, r)
+		r2 := new(http.Request)
+		*r2 = *r
+		r2 = r2.WithContext(ctx)
+		h.ServeHTTP(w, r2)
 	})
 }
