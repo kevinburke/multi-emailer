@@ -132,7 +132,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			rest.ServerError(w, r, err)
 			return
 		}
-		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Write(data)
 	}
 
@@ -217,7 +217,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 	r.Handle(regexp.MustCompile(`^/v1/send$`), []string{"POST"}, authenticator.Handle(mailer.sendMail))
 	// for Google App Engine
 	r.HandleFunc(regexp.MustCompile(`^/_ah/health$`), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		io.WriteString(w, "ok")
 	})
 	return r
