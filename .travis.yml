@@ -4,6 +4,11 @@ language: go
 go:
   - 1.8.x
   - 1.9.x
-  - tip
+  - 1.10.x
+  - master
 
 script: make diff race-test
+
+cache:
+  directories:
+    - $GOPATH/pkg

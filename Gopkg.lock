@@ -49,14 +49,14 @@
 [[projects]]
   name = "github.com/kevinburke/handlers"
   packages = ["."]
-  revision = "06d9199656d509cc3b7fd0febd7013f54d1c5492"
-  version = "0.36"
+  revision = "428549f39100b53b9c7d155f703979b87137cb8c"
+  version = "0.39"
 
 [[projects]]
   name = "github.com/kevinburke/rest"
   packages = ["."]
-  revision = "b2c053a6ab954961c506c953ba0e735aac5725c2"
-  version = "1.1"
+  revision = "54a8b110959553907c102f05f4182840d8f1c92c"
+  version = "2.1"
 
 [[projects]]
   branch = "master"
@@ -164,6 +164,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d6c29df7c25d256d1325c4c960d2b41a84bc81fa48f864f1723f1333a23e0875"
+  inputs-digest = "340282410f712c180be3105fbbc0e5789b8e888da1a5754d15b5524e81140c4a"
   solver-name = "gps-cdcl"
   solver-version = 1

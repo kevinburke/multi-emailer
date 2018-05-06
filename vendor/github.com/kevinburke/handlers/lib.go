@@ -29,7 +29,7 @@ import (
 	"github.com/kevinburke/rest"
 )
 
-const Version = "0.36"
+const Version = "0.39"
 
 func push(w http.ResponseWriter, target string, opts *http.PushOptions) error {
 	if pusher, ok := w.(http.Pusher); ok {
@@ -103,6 +103,10 @@ func Server(h http.Handler, serverName string) http.Handler {
 			wroteHeader: false,
 		}
 		h.ServeHTTP(sw, r)
+		if sw.wroteHeader == false {
+			sw.w.Header().Set("Server", sw.name)
+			sw.wroteHeader = true
+		}
 	})
 }
 
@@ -221,6 +225,9 @@ func (l *responseLogger) WriteHeader(s int) {
 }
 
 func (l *responseLogger) Status() int {
+	if l.status == 0 {
+		return http.StatusOK // default status
+	}
 	return l.status
 }
 

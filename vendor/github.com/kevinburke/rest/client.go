@@ -21,9 +21,7 @@ var JSON UploadType = "application/json"
 // FormURLEncoded specifies you'd like to upload form-urlencoded data.
 var FormURLEncoded UploadType = "application/x-www-form-urlencoded"
 
-const Version = "1.1"
-
-var defaultTimeout = 6500 * time.Millisecond
+const Version = "2.1"
 
 var ua string
 
@@ -53,8 +51,7 @@ type Client struct {
 }
 
 // NewClient returns a new Client with the given user and password. Base is the
-// scheme+domain to hit for all requests. By default, the request timeout is
-// set to 6.5 seconds.
+// scheme+domain to hit for all requests.
 func NewClient(user, pass, base string) *Client {
 	return &Client{
 		ID:          user,
@@ -172,10 +169,10 @@ func (c *Client) Do(r *http.Request, v interface{}) error {
 // it cannot do so, return an error containing the entire response body.
 func DefaultErrorParser(resp *http.Response) error {
 	resBody, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	rerr := new(Error)
 	err = json.Unmarshal(resBody, rerr)
 	if err != nil {
@@ -184,7 +181,7 @@ func DefaultErrorParser(resp *http.Response) error {
 	if rerr.Title == "" {
 		return fmt.Errorf("invalid response body: %s", string(resBody))
 	} else {
-		rerr.StatusCode = resp.StatusCode
+		rerr.Status = resp.StatusCode
 		return rerr
 	}
 }
