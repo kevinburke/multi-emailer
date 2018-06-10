@@ -19,7 +19,7 @@ are appropriate - you'll need [a Google Client ID and Secret][google].
 
 - [Enable the GMail API][enable] for the project you created.
 
-[google]: https://github.com/saintpete/logrole/blob/master/docs/google.md
+[google]: https://github.com/kevinburke/logrole/blob/master/docs/google.md
 [enable]: https://console.developers.google.com/apis/api/gmail.googleapis.com/overview
 
 - Add the groups of people you want to email. The `email` key should follow this
