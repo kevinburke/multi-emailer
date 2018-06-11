@@ -22,10 +22,10 @@ UNAME := $(shell uname)
 
 $(MEGACHECK): | $(GOPATH)/bin
 ifeq ($(UNAME), Darwin)
-	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-darwin-amd64
+	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2018-05-12/megacheck-darwin-amd64
 endif
 ifeq ($(UNAME), Linux)
-	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-linux-amd64
+	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2018-05-12/megacheck-linux-amd64
 endif
 	chmod 755 $(MEGACHECK)
 
