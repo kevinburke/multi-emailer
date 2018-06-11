@@ -99,7 +99,7 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 			msg := &gophermail.Message{
 				From:     *auth.Email,
 				To:       []mail.Address{to.Address},
-				Cc:       recipient.CC,
+				Cc:       to.CC,
 				Subject:  subject,
 				Body:     body,
 				HTMLBody: string(html),
