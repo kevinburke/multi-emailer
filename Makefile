@@ -4,6 +4,7 @@ SHELL = /bin/bash -o pipefail
 
 BUMP_VERSION := $(GOPATH)/bin/bump_version
 DIFFER := $(GOPATH)/bin/differ
+GENERATE_TLS_CERT := $(GOPATH)/bin/generate-tls-cert
 GO_BINDATA := $(GOPATH)/bin/go-bindata
 JUSTRUN := $(GOPATH)/bin/justrun
 MEGACHECK := $(GOPATH)/bin/megacheck
@@ -47,6 +48,19 @@ ifndef config
 	$(eval config = config.yml)
 endif
 	$(GOPATH)/bin/multi-emailer --config=$(config)
+
+serve-local: | $(GOPATH)/bin/multi-emailer
+	$(MAKE) serve config=local.yml
+
+watch-local: | $(GOPATH)/bin/multi-emailer leaf.key leaf.pem
+	$(MAKE) watch config=local.yml
+
+leaf.key:
+leaf.pem: | $(GENERATE_TLS_CERT)
+	$(GENERATE_TLS_CERT) --host=localhost:8048
+
+$(GENERATE_TLS_CERT): | $(GOPATH)/bin
+	go get -u github.com/kevinburke/generate-tls-cert/...
 
 $(GO_BINDATA): | $(GOPATH)/bin
 	go get -u github.com/kevinburke/go-bindata/...

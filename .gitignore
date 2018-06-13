@@ -1,5 +1,7 @@
 config.yml
 releases
 app.yaml
-*.pem
+/*.pem
+/*.key
+/*.crt
 /cfgs/*.yml
