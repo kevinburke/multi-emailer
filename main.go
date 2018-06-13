@@ -394,6 +394,9 @@ func commonMain() (*FileConfig, http.Handler) {
 		AllowUnencryptedTraffic: true,
 		ClientID:                c.GoogleClientID,
 		Secret:                  c.GoogleSecret,
+		ServeLogin: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			io.WriteString(w, "login with google")
+		}),
 		Scopes: []string{
 			"email",
 			gmail.GmailSendScope,
