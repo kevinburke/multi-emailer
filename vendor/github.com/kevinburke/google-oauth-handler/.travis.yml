@@ -1,0 +1,20 @@
+language: go
+go_import_path: github.com/kevinburke/google-oauth-handler
+
+os: linux
+dist: trusty
+sudo: false
+
+before_script:
+  - go get ./...
+
+script:
+  - make race-test
+
+go:
+  - 1.10.x
+  - master
+
+cache:
+  directories:
+    - $GOPATH/pkg

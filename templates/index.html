@@ -37,6 +37,7 @@
       <div class="row">
         <form method="POST" action="/v1/send" />
           <div class="col-md-6">
+            {{ if .Email }}
             <p>
             Sending messages from <b>{{ .Email }}</b>. The messages will appear
             like personalized emails from your GMail account.
@@ -73,20 +74,43 @@
                 </div>
               </div>
             </div>
+            {{ else }}
+            <h3>Authenticate with Google</h3>
+            <p>
+            This tool makes it easy to contact your public officials, but we
+            need your permission to send emails on your behalf.
+            </p>
+            <p>
+            We only need the "send email" permission; we <i>cannot</i> read
+            your inbox or see your contacts. We do not store the contents
+            of emails you send to your elected officials.
+            </p>
+            <p>
+            <a href="{{ .AuthURL }}" class="btn btn-success" type="submit">Authenticate with Google</a>
+            </p>
+            {{ end }}
           </div>
           <div class="col-md-6">
+            {{ if .Email }}
             <h3>Who should we send to?</h3>
+            {{ else }}
+            <h3>Groups you'll be able to send emails to:</h3>
+            {{ end }}
             <hr>
+            {{ if .Email }}
             <div class="radio">
               <label>
                 <input type="radio" name="group_id" required="true" id="test" value="test">
                 Send a test message to yourself
               </label>
             </div>
+            {{ end }}
             {{ range .Groups }}
             <div class="radio">
               <label>
+                {{ if $.Email }}
                 <input type="radio" name="group_id" required="true" id="{{ .ID }}" value="{{ .ID }}">
+                {{ end }}
                 {{ .Name }} {{ if gt (len .Recipients) 1 }}({{ len .Recipients }} recipients){{ else }}(1 recipient{{ if (index .Recipients 0).CC }}, {{ len (index .Recipients 0).CC }} cc'd{{ end }}){{ end -}}
                 {{- if $.IsHomepage }}
                 <a href="/{{ .ID }}">link</a>

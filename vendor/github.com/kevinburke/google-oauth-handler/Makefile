@@ -1,26 +1,26 @@
-BUMP_VERSION := $(shell command -v bump_version)
-STATICCHECK := $(shell command -v staticcheck)
+BUMP_VERSION := $(GOPATH)/bin/bump_version
+MEGACHECK := $(GOPATH)/bin/megacheck
 
-SHELL = /bin/bash
+SHELL = /bin/bash -o pipefail
 
-vet:
-ifndef STATICCHECK
-	go get -u honnef.co/go/tools/cmd/staticcheck
-endif
+$(MEGACHECK):
+	go get -u honnef.co/go/tools/cmd/megacheck
+
+lint: | $(MEGACHECK)
 	go vet ./...
-	staticcheck ./...
+	$(MEGACHECK) --ignore='github.com/kevinburke/google-oauth-handler/lib.go:S1002' ./...
 
-test: vet
+test: lint
 	go test ./...
 
-race-test: vet
+race-test: lint
 	go test -race ./...
 
 install:
 	go install ./...
 
-release: race-test
-ifndef BUMP_VERSION
-	go get github.com/Shyp/bump_version
-endif
+$(BUMP_VERSION):
+	go get -u github.com/Shyp/bump_version
+
+release: race-test | $(BUMP_VERSION)
 	bump_version minor lib.go

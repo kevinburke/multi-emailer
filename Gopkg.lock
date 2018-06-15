@@ -43,8 +43,8 @@
 [[projects]]
   name = "github.com/kevinburke/google-oauth-handler"
   packages = ["."]
-  revision = "f6106a1af27837eb8d7ae253351c33e46e62a78a"
-  version = "0.2"
+  revision = "508ec4394116dae2d6674c5d403c096523259d3f"
+  version = "0.4"
 
 [[projects]]
   name = "github.com/kevinburke/handlers"
@@ -164,6 +164,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "340282410f712c180be3105fbbc0e5789b8e888da1a5754d15b5524e81140c4a"
+  inputs-digest = "9387afeef9ad6b56b073d50ce3a740c40fccd41f25213eeff0e3d1509ee5df6b"
   solver-name = "gps-cdcl"
   solver-version = 1

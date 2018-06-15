@@ -108,6 +108,7 @@ type homepageData struct {
 	IsHomepage bool
 	// If there's only one group and one recipient, put opening line there
 	OpeningLine string
+	AuthURL     string
 }
 
 func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title string, withGoogle bool, publicHost string, siteVerification string) http.Handler {
@@ -136,7 +137,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		w.Write(data)
 	}
 
-	renderHomepage := func(w http.ResponseWriter, r *http.Request, email *mail.Address) {
+	renderHomepage := func(w http.ResponseWriter, r *http.Request, email *mail.Address, authURL string) {
 		push(w, "/static/bootstrap.min.css", "style")
 		push(w, "/static/style.css", "style")
 		vals := r.URL.Query()
@@ -183,6 +184,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			Body:        bodyCookie,
 			IsHomepage:  r.URL.Path == "/",
 			OpeningLine: openingLine,
+			AuthURL:     authURL,
 		})
 	}
 
@@ -195,26 +197,30 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		})
 	}
 	if withGoogle {
+		authenticator.SetLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			u := authenticator.URL(r)
+			renderHomepage(w, r, nil, u)
+		}))
 		r.Handle(homeRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
-			renderHomepage(w, r, auth.Email)
+			renderHomepage(w, r, auth.Email, "")
 		}))
 		r.Handle(recipientsRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
 			renderRecipients(w, r)
 		}))
+		r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
+			http.Redirect(w, r, "/", 302)
+		}))
+		r.Handle(regexp.MustCompile(`^/v1/send$`), []string{"POST"}, authenticator.Handle(mailer.sendMail))
 	} else {
 		// For testing; no authentication.
 		testEmail, _ := mail.ParseAddress("Test Email <test@example.org>")
 		r.HandleFunc(homeRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
-			renderHomepage(w, r, testEmail)
+			renderHomepage(w, r, testEmail, "")
 		})
 		r.HandleFunc(recipientsRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
 			renderRecipients(w, r)
 		})
 	}
-	r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
-		http.Redirect(w, r, "/", 302)
-	}))
-	r.Handle(regexp.MustCompile(`^/v1/send$`), []string{"POST"}, authenticator.Handle(mailer.sendMail))
 	// for Google App Engine
 	r.HandleFunc(regexp.MustCompile(`^/_ah/health$`), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -388,21 +394,17 @@ func commonMain() (*FileConfig, http.Handler) {
 	} else {
 		host = "http://localhost:" + strconv.Itoa(*c.Port)
 	}
-	cfg := google.Config{
+	gcfg := google.Config{
 		SecretKey:               key,
 		BaseURL:                 host,
 		AllowUnencryptedTraffic: true,
 		ClientID:                c.GoogleClientID,
 		Secret:                  c.GoogleSecret,
-		ServeLogin: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			io.WriteString(w, "login with google")
-		}),
 		Scopes: []string{
 			"email",
 			gmail.GmailSendScope,
 		},
 	}
-	authenticator := google.NewAuthenticator(cfg)
 	if c.GoogleSiteVerification != "" {
 		if !strings.HasPrefix(c.GoogleSiteVerification, "google") {
 			c.GoogleSiteVerification = "google" + c.GoogleSiteVerification
@@ -411,6 +413,7 @@ func commonMain() (*FileConfig, http.Handler) {
 			c.GoogleSiteVerification = c.GoogleSiteVerification + ".html"
 		}
 	}
+	authenticator := google.NewAuthenticator(gcfg)
 	mux := NewServeMux(authenticator, m, c.Title, !c.NoGoogleAuth, c.PublicHost, c.GoogleSiteVerification)
 	mux = handlers.UUID(mux)
 	if strings.HasPrefix(c.PublicHost, "https://") {
