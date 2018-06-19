@@ -196,6 +196,9 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			io.WriteString(w, "google-site-verification: "+siteVerification)
 		})
 	}
+	r.HandleFunc(recipientsRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
+		renderRecipients(w, r)
+	})
 	if withGoogle {
 		authenticator.SetLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			u := authenticator.URL(r)
@@ -203,9 +206,6 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		}))
 		r.Handle(homeRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, auth *google.Auth) {
 			renderHomepage(w, r, auth.Email, "")
-		}))
-		r.Handle(recipientsRx, []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
-			renderRecipients(w, r)
 		}))
 		r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
 			http.Redirect(w, r, "/", 302)
@@ -216,9 +216,6 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		testEmail, _ := mail.ParseAddress("Test Email <test@example.org>")
 		r.HandleFunc(homeRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
 			renderHomepage(w, r, testEmail, "")
-		})
-		r.HandleFunc(recipientsRx, []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
-			renderRecipients(w, r)
 		})
 	}
 	// for Google App Engine
