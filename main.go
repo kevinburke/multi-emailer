@@ -58,6 +58,8 @@ func init() {
 	homepageTpl = template.Must(template.New("homepage").Parse(homepageHTML))
 }
 
+var goVersion = runtime.Version()
+
 const Version = "1.6"
 
 var DefaultPort = 8048
@@ -93,6 +95,13 @@ func render(w http.ResponseWriter, r *http.Request, tpl *template.Template, name
 		return
 	}
 	w.Write(buf.Bytes())
+}
+
+func logout(auth *google.Authenticator) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		auth.Logout(w)
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
 }
 
 type homepageData struct {
@@ -147,8 +156,8 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			http.Redirect(w, r, r.URL.Path, http.StatusFound)
 			return
 		}
-		subjCookie := getCookie(w, r, "subject", mailer.secretKey)
-		bodyCookie := getCookie(w, r, "body", mailer.secretKey)
+		subjCookie := getCookie(w, r, "subject", mailer.secretKey, email != nil)
+		bodyCookie := getCookie(w, r, "body", mailer.secretKey, email != nil)
 		match := homeRx.FindStringSubmatch(r.URL.Path)
 		var groups map[string]*Group
 		if match == nil || match[1] == "" {
@@ -178,7 +187,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			Groups:      groups,
 			Error:       GetFlashError(w, r, mailer.secretKey),
 			Success:     GetFlashSuccess(w, r, mailer.secretKey),
-			Version:     runtime.Version(),
+			Version:     goVersion,
 			PublicHost:  publicHost,
 			Subject:     subjCookie,
 			Body:        bodyCookie,
@@ -189,6 +198,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 	}
 
 	r := new(handlers.Regexp)
+
 	r.Handle(regexp.MustCompile(`(^/static|^/favicon.ico$|^/privacy$|^/terms-of-service$)`), []string{"GET"}, handlers.GZip(staticServer))
 	if siteVerification != "" {
 		r.HandleFunc(regexp.MustCompile("/"+regexp.QuoteMeta(siteVerification)), []string{"GET"}, func(w http.ResponseWriter, r *http.Request) {
@@ -200,7 +210,15 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 		renderRecipients(w, r)
 	})
 	if withGoogle {
+		r.HandleFunc(regexp.MustCompile(`^/logout$`), []string{"POST"}, logout(authenticator))
 		authenticator.SetLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			vals := r.URL.Query()
+			if vals.Get("subject") != "" || vals.Get("body") != "" {
+				setCookie(w, vals.Get("subject"), "subject", mailer.secretKey)
+				setCookie(w, vals.Get("body"), "body", mailer.secretKey)
+				http.Redirect(w, r, r.URL.Path, http.StatusFound)
+				return
+			}
 			u := authenticator.URL(r)
 			renderHomepage(w, r, nil, u)
 		}))

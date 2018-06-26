@@ -19,6 +19,25 @@
           <h1>multi-emailer</h1>
           {{ end }}
         </div>
+        <div class="col-md-1 col-md-offset-5">
+          {{ if .Email }}
+          <form id="logout-form" method="POST" action="/logout">
+            <p class="logout">
+              <a id="logout-link" onclick="" class="nav-link" href="/">Log off</a>
+            </p>
+          </form>
+          <script>
+            document.getElementById('logout-link').onclick = function(ev) {
+            ev.preventDefault();
+            document.getElementById('logout-form').submit();
+            };
+            document.getElementById('logout-link').onmousedown = function(ev) {
+            ev.preventDefault();
+            document.getElementById('logout-form').submit();
+            };
+          </script>
+          {{ end }}
+        </div>
       </div>
       {{ if .Error }}
       <div class="row">

@@ -35,21 +35,23 @@ func setCookie(w http.ResponseWriter, msg string, name string, key *[32]byte) {
 // GetFlashSuccess finds a flash success message in the request (if one exists).
 // If one exists then it's unset and returned.
 func GetFlashSuccess(w http.ResponseWriter, r *http.Request, key *[32]byte) string {
-	return getCookie(w, r, "flash-success", key)
+	return getCookie(w, r, "flash-success", key, true)
 }
 
 // GetFlashError finds a flash error in the request (if one exists). If one
 // exists then it's unset and returned.
 func GetFlashError(w http.ResponseWriter, r *http.Request, key *[32]byte) string {
-	return getCookie(w, r, "flash-error", key)
+	return getCookie(w, r, "flash-error", key, true)
 }
 
-func getCookie(w http.ResponseWriter, r *http.Request, name string, key *[32]byte) string {
+func getCookie(w http.ResponseWriter, r *http.Request, name string, key *[32]byte, clear bool) string {
 	cookie, err := r.Cookie(name)
 	if err == http.ErrNoCookie {
 		return ""
 	}
-	clearCookie(w, name)
+	if clear {
+		clearCookie(w, name)
+	}
 	msg, err := unopaque(cookie.Value, key)
 	if err != nil {
 		return ""

@@ -29,7 +29,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const Version = "0.4"
+const Version = "0.5"
 
 // DefaultExpiry is the duration of a valid cookie.
 var DefaultExpiry = 14 * 24 * time.Hour
@@ -145,6 +145,16 @@ func NewAuthenticator(c Config) *Authenticator {
 		a.login = c.ServeLogin
 	}
 	return a
+}
+
+// Logout wipes the Google authentication cookie from w.
+func (a *Authenticator) Logout(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    cookieName,
+		Path:    "/",
+		MaxAge:  -1,
+		Expires: time.Unix(1, 0),
+	})
 }
 
 // URL returns a link to the Google auth URL for this Authenticator. If

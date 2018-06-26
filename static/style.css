@@ -15,3 +15,8 @@ footer {
   height: 1px;
   left: -3000px;
 }
+
+.logout {
+  margin-top: 30px;
+  float: right;
+}
