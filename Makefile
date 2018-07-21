@@ -37,6 +37,12 @@ lint: $(MEGACHECK)
 test: lint
 	go list ./... | grep -v vendor | xargs go test
 
+check: $(GOPATH)/bin/multi-emailer
+ifndef config
+	$(eval config = config.yml)
+endif
+	multi-emailer --check --config=$(config)
+
 race-test: lint
 	go list ./... | grep -v vendor | xargs go test -race
 

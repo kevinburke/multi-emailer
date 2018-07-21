@@ -4,8 +4,9 @@ set -eo pipefail
 
 main() {
     local current_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    mv "${current_directory}/../vendor" "/tmp/multi-emailer-vendor"
     pushd "${current_directory}/.."
+        make check
+        mv "./vendor" "/tmp/multi-emailer-vendor"
         gcloud app deploy --quiet
     popd
     mv "/tmp/multi-emailer-vendor" "${current_directory}/../vendor"

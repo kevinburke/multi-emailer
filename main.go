@@ -279,6 +279,7 @@ type FileConfig struct {
 	GoogleSiteVerification string `yaml:"google_site_verification"`
 }
 
+var check = flag.Bool("check", false, "Validate the config file and then exit")
 var cfg = flag.String("config", "config.yml", "Path to a config file")
 var errWrongLength = errors.New("Secret key has wrong length. Should be a 64-byte hex string")
 
@@ -315,22 +316,31 @@ func validID(id string) bool {
 	return validIDRx.MatchString(id)
 }
 
+func loadConfig(filename string) (*FileConfig, error) {
+	data, err := ioutil.ReadFile(*cfg)
+	if err != nil {
+		return nil, err
+	}
+	c := new(FileConfig)
+	if err := yaml.Unmarshal(data, c); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
 func commonMain() (*FileConfig, http.Handler) {
 	flag.Parse()
 	if flag.NArg() > 2 {
 		os.Stderr.WriteString("too many arguments")
 		os.Exit(2)
 	}
-
-	data, err := ioutil.ReadFile(*cfg)
+	c, err := loadConfig(*cfg)
 	if err != nil {
-		logger.Error("Couldn't find config file", "err", err)
+		logger.Error("Error loading/parsing config file", "err", err)
 		os.Exit(2)
 	}
-	c := new(FileConfig)
-	if err := yaml.Unmarshal(data, c); err != nil {
-		logger.Error("Couldn't parse config file", "err", err)
-		os.Exit(2)
+	if *check {
+		os.Exit(0)
 	}
 	key, err := getSecretKey(c.SecretKey)
 	if err != nil {
