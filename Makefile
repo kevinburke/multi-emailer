@@ -90,9 +90,14 @@ static/license.txt: LICENSE
 	cp -f LICENSE static/license.txt
 
 $(DIFFER): $(GOPATH)/bin
+ifeq ($(UNAME), Darwin)
+	curl --silent --location --output $(GOPATH)/bin/differ https://github.com/kevinburke/differ/releases/download/0.5/differ-darwin-amd64 && chmod 755 $(GOPATH)/bin/differ
+endif
+ifeq ($(UNAME), Linux)
 	curl --silent --location --output $(GOPATH)/bin/differ https://github.com/kevinburke/differ/releases/download/0.5/differ-linux-amd64 && chmod 755 $(GOPATH)/bin/differ
+endif
 
-diff: $(DIFFER)
+diff: | $(DIFFER)
 	$(DIFFER) $(MAKE) assets static/privacy.html
 
 $(BUMP_VERSION):
