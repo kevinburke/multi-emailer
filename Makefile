@@ -83,8 +83,8 @@ static/privacy.html: privacy-policy.md
 static/license.txt: LICENSE
 	cp -f LICENSE static/license.txt
 
-$(DIFFER):
-	go get -u github.com/kevinburke/differ
+$(DIFFER): $(GOPATH)/bin
+	curl --silent --location --output $(GOPATH)/bin/differ https://github.com/kevinburke/differ/releases/download/0.5/differ-linux-amd64 && chmod 755 $(GOPATH)/bin/differ
 
 diff: $(DIFFER)
 	$(DIFFER) $(MAKE) assets static/privacy.html
