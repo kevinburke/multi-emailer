@@ -60,7 +60,7 @@ func init() {
 
 var goVersion = runtime.Version()
 
-const Version = "1.6"
+const Version = "1.7"
 
 var DefaultPort = 8048
 
