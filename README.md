@@ -7,7 +7,7 @@ you inspect the email *very* closely).
 
 Here's a screenshot:
 
-<img src="https://monosnap.com/file/y8iqP37afiCUA1lN0xhoifYWsXP0Bx.png">
+<img src="https://monosnap.com/image/BgmNUzU60hk0uyxcC32cRBuhvJwiUN.png">
 
 ## Installation
 
@@ -26,21 +26,46 @@ are appropriate - you'll need [a Google Client ID and Secret][google].
 format: `"First Last" <email@domain.com>`. You can also provide a plain email
 address - `email@domain.com`. The `opening_line` should be the first line of
 the email to that person - "Dear X". We'll add the comma and the rest of the
-message.
+message. Here is an example:
+
+    ```yaml
+    groups:
+      - id: sf-planning-commission
+        name: SF Planning Commission
+        recipients:
+            - email: Rich Hillis <richhillissf@yahoo.com>
+              opening_line: Commissioner Hillis
+              cc:
+                - Planning Commission Secretary <commissions.secretary@sfgov.org>
+            - email: Dennis Richards <dennis.richards@sfgov.org>
+              opening_line: Commissioner Richards
+            - email: Rodney Fong <planning@rodneyfong.com>
+              opening_line: Commissioner Fong
+            - email: Christine Johnson <christine.d.johnson@sfgov.org>
+              opening_line: Commissioner Johnson
+            - email: Joel Koppel <joel.koppel@sfgov.org>
+              opening_line: Commissioner Koppel
+            - email: Myrna Melgar <myrna.melgar@sfgov.org>
+              opening_line: Commissioner Melgar
+            - email: Kathrin Moore <kathrin.moore@sfgov.org>
+              opening_line: Commissioner Moore
+    ```
 
 - Start the server: `multi-emailer --config=/path/to/config.yml`. That's it!
 Logs are sent to stderr and can be redirected from there.
 
 #### Deploying to Google Cloud
 
-You should just be able to add an untracked config.yml and run `gcloud app
-deploy` and have everything work from there.
+Run `./bin/gae-deploy`. Google Cloud has trouble with the `vendor` directory.
 
 #### Deploying to Other Platforms
 
 You can download and install the binary directly:
 
-    curl --silent --location https://github.com/kevinburke/multi-emailer/releases/download/1.0/multi-emailer-linux-amd64 > /usr/local/bin/multi-emailer && chmod 755 /usr/local/bin/multi-emailer
+```bash
+curl --silent --location --output /usr/local/bin/multi-emailer https://github.com/kevinburke/multi-emailer/releases/download/1.7/multi-emailer-linux-amd64
+chmod 755 /usr/local/bin/multi-emailer
+```
 
 Then run `/usr/local/bin/multi-emailer` in a directory with the config file and
 the server should start as you expect.
