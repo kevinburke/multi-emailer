@@ -266,7 +266,6 @@ type FileConfig struct {
 	HTTPOnly       bool           `yaml:"http_only"`
 	GoogleClientID string         `yaml:"google_client_id"`
 	GoogleSecret   string         `yaml:"google_secret"`
-	Groups         []*ConfigGroup `yaml:"groups"`
 	Port           *int           `yaml:"port"`
 	Title          string         `yaml:"title"`
 
