@@ -226,7 +226,7 @@ func NewServeMux(authenticator *google.Authenticator, mailer *Mailer, title stri
 			renderHomepage(w, r, auth.Email, "")
 		}))
 		r.Handle(regexp.MustCompile(`^/auth/callback$`), []string{"GET"}, authenticator.Handle(func(w http.ResponseWriter, r *http.Request, _ *google.Auth) {
-			http.Redirect(w, r, "/", 302)
+			http.Redirect(w, r, "/", http.StatusFound)
 		}))
 		r.Handle(regexp.MustCompile(`^/v1/send$`), []string{"POST"}, authenticator.Handle(mailer.sendMail))
 	} else {
@@ -281,7 +281,7 @@ type FileConfig struct {
 
 var check = flag.Bool("check", false, "Validate the config file and then exit")
 var cfg = flag.String("config", "config.yml", "Path to a config file")
-var errWrongLength = errors.New("Secret key has wrong length. Should be a 64-byte hex string")
+var errWrongLength = errors.New("secret key has wrong length; should be a 64-byte hex string")
 
 // NewRandomKey returns a random key or panics if one cannot be provided.
 func NewRandomKey() *[32]byte {
