@@ -7,7 +7,7 @@ DIFFER := $(GOPATH)/bin/differ
 GENERATE_TLS_CERT := $(GOPATH)/bin/generate-tls-cert
 GO_BINDATA := $(GOPATH)/bin/go-bindata
 JUSTRUN := $(GOPATH)/bin/justrun
-MEGACHECK := $(GOPATH)/bin/megacheck
+STATICCHECK := $(GOPATH)/bin/staticcheck
 RELEASE := $(GOPATH)/bin/github-release
 
 # Add files that change frequently to this list.
@@ -21,18 +21,12 @@ $(GOPATH)/bin:
 
 UNAME := $(shell uname)
 
-$(MEGACHECK): | $(GOPATH)/bin
-ifeq ($(UNAME), Darwin)
-	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2018-05-12/megacheck-darwin-amd64
-endif
-ifeq ($(UNAME), Linux)
-	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2018-05-12/megacheck-linux-amd64
-endif
-	chmod 755 $(MEGACHECK)
+$(STATICCHECK): | $(GOPATH)/bin
+	go get -u honnef.co/go/tools/cmd/staticcheck
 
-lint: $(MEGACHECK)
+lint: $(STATICCHECK)
 	go list ./... | grep -v vendor | xargs go vet
-	go list ./... | grep -v vendor | xargs $(MEGACHECK)
+	go list ./... | grep -v vendor | xargs $(STATICCHECK)
 
 test: lint
 	go list ./... | grep -v vendor | xargs go test
