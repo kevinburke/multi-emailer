@@ -1,0 +1,21 @@
+groups:
+    - id: dotcom
+      name: Dot Com Email Addresses
+      recipients:
+          - email: Kevin Burke <kevin@example.com>
+            opening_line: Hi Kevin
+          - email: Abe Lincoln <abe@example.com>
+            opening_line: President Lincoln
+          - email: Margaret Hamilton <margaret@example.com>
+            opening_line: Mrs. Hamilton
+            cc:
+              - Margaret Hamilton's Aide <margaret+aide@example.com>
+    - id: dotorg
+      name: Dot Org Email List
+      recipients:
+          - email: Kevin Burke <kevin@example.org>
+            opening_line: Hi Kevin
+          - email: Abe Lincoln <abe@example.org>
+            opening_line: President Lincoln
+          - email: Margaret Hamilton <margaret@example.org>
+            opening_line: Mrs. Hamilton

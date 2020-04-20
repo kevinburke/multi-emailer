@@ -256,13 +256,16 @@ type ConfigRecipient struct {
 	OpeningLine string   `yaml:"opening_line"`
 }
 
+type EmailsConfig struct {
+	Groups []*ConfigGroup `yaml:"groups"`
+}
+
 type FileConfig struct {
 	SecretKey      string         `yaml:"secret_key"`
 	PublicHost     string         `yaml:"public_host"`
 	HTTPOnly       bool           `yaml:"http_only"`
 	GoogleClientID string         `yaml:"google_client_id"`
 	GoogleSecret   string         `yaml:"google_secret"`
-	Groups         []*ConfigGroup `yaml:"groups"`
 	Port           *int           `yaml:"port"`
 	Title          string         `yaml:"title"`
 
@@ -281,6 +284,7 @@ type FileConfig struct {
 
 var check = flag.Bool("check", false, "Validate the config file and then exit")
 var cfg = flag.String("config", "config.yml", "Path to a config file")
+var emailsCfg = flag.String("emails-config", "config.yml", "Path to a config file that contains the emails groups")
 var errWrongLength = errors.New("secret key has wrong length; should be a 64-byte hex string")
 
 // NewRandomKey returns a random key or panics if one cannot be provided.
@@ -317,11 +321,23 @@ func validID(id string) bool {
 }
 
 func loadConfig(filename string) (*FileConfig, error) {
-	data, err := ioutil.ReadFile(*cfg)
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 	c := new(FileConfig)
+	if err := yaml.Unmarshal(data, c); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func loadEmailsConfig(filename string) (*EmailsConfig, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	c := new(EmailsConfig)
 	if err := yaml.Unmarshal(data, c); err != nil {
 		return nil, err
 	}
@@ -336,7 +352,12 @@ func commonMain() (*FileConfig, http.Handler) {
 	}
 	c, err := loadConfig(*cfg)
 	if err != nil {
-		logger.Error("Error loading/parsing config file", "err", err)
+		logger.Error("Error loading/parsing config file", "err", err, "path", *cfg)
+		os.Exit(2)
+	}
+	emailsConfig, err := loadEmailsConfig(*emailsCfg)
+	if err != nil {
+		logger.Error("Error loading/parsing emails config file", "err", err, "path", *emailsCfg)
 		os.Exit(2)
 	}
 	if *check {
@@ -348,7 +369,7 @@ func commonMain() (*FileConfig, http.Handler) {
 		os.Exit(2)
 	}
 	m := &Mailer{Groups: make(map[string]*Group), Logger: logger, secretKey: key}
-	for _, group := range c.Groups {
+	for _, group := range emailsConfig.Groups {
 		if group.ID == "" {
 			logger.Error("Please provide a group ID")
 			os.Exit(2)
