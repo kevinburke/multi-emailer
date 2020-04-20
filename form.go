@@ -56,19 +56,19 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 	id := r.FormValue("group_id")
 	if subject == "" {
 		FlashError(w, "Please provide a subject", m.secretKey)
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	if body == "" {
 		FlashError(w, "Please provide a message body", m.secretKey)
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	var group *Group
 	if id == "test" {
 		group = &Group{
 			Recipients: []*Recipient{
-				&Recipient{Address: *auth.Email, OpeningLine: "Hi test"},
+				{Address: *auth.Email, OpeningLine: "Hi test"},
 			},
 		}
 	} else {
@@ -160,5 +160,5 @@ func (m *Mailer) sendMail(w http.ResponseWriter, r *http.Request, auth *google.A
 		word = "messages"
 	}
 	FlashSuccess(w, fmt.Sprintf("Sent %d %s. They will appear in your Sent folder shortly", len(group.Recipients), word), m.secretKey)
-	http.Redirect(w, r, "/", 302)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
