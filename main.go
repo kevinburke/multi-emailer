@@ -321,7 +321,7 @@ func validID(id string) bool {
 }
 
 func loadConfig(filename string) (*FileConfig, error) {
-	data, err := ioutil.ReadFile(*filename)
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func loadConfig(filename string) (*FileConfig, error) {
 }
 
 func loadEmailsConfig(filename string) (*EmailsConfig, error) {
-	data, err := ioutil.ReadFile(*filename)
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
